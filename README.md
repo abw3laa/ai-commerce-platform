@@ -45,9 +45,38 @@ npm run build && npm start   # compiled production build
 - `npm run typecheck` — TypeScript, no emit
 - `npm run lint` — ESLint
 
+## Continuous Integration
+
+`.github/workflows/ci.yml` runs on every push and pull request: `npm ci`,
+`prisma generate`, `prisma migrate deploy` against a temporary PostgreSQL
+service container (created fresh for each run, discarded afterwards),
+then `typecheck`, `lint`, `test`, and `build`. It depends on nothing
+outside the workflow — no local database, no external service.
+
+## Prisma — tooling preparation only (no models yet)
+
+`prisma/schema.prisma` and `prisma.config.ts` are in place so the CLI
+(`prisma generate`, `prisma migrate ...`) and CI have something real to
+run, but the schema intentionally defines **no models yet** —
+`prisma/migrations/` is empty on purpose. The first real model
+(`admin_users`) and its first migration are a separate, dedicated task.
+
+Prisma ORM 7 moved the CLI's database connection, schema path, and
+migrations folder out of `schema.prisma` and into `prisma.config.ts`;
+`schema.prisma` itself now only declares the `datasource` and the
+`generator` (using the new `prisma-client` provider, which requires an
+explicit `output` path — see the file for details).
+
+```bash
+npx prisma generate       # regenerates the client into src/generated/prisma (gitignored)
+npx prisma migrate dev    # local development — creates/applies migrations
+npx prisma migrate deploy # CI/production — applies existing migrations only, never creates one
+```
+
 ## Not built yet (upcoming tasks, in the agreed phase order)
 
-Database (PostgreSQL + Prisma), auth & permissions, admin panel, backup
-script, then products/inventory/offers, then the WhatsApp connector
-(Baileys), then the AI core, then orders/payment, then shipping — each as
-its own small task with its own tests, per the agreed working method.
+The `admin_users` table and its first migration, auth & permissions,
+admin panel, backup script, then products/inventory/offers, then the
+WhatsApp connector (Baileys), then the AI core, then orders/payment,
+then shipping — each as its own small task with its own tests, per the
+agreed working method.

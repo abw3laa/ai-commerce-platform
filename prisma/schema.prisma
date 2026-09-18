@@ -1,0 +1,16 @@
+// This is the Prisma schema file for the AI Commerce & Automation Platform.
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+//
+// Status: CI/tooling preparation only (see prisma.config.ts).
+// Intentionally contains NO models yet — the first real model
+// ("admin_users") and its migration are a separate, dedicated task.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
