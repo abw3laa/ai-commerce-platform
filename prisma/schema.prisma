@@ -1,9 +1,5 @@
 // This is the Prisma schema file for the AI Commerce & Automation Platform.
 // Learn more about it in the docs: https://pris.ly/d/prisma-schema
-//
-// Status: CI/tooling preparation only (see prisma.config.ts).
-// Intentionally contains NO models yet — the first real model
-// ("admin_users") and its migration are a separate, dedicated task.
 
 generator client {
   provider     = "prisma-client"
@@ -13,4 +9,18 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// Phase 1 / Task 2 — foundation admin accounts only.
+// No roles/permissions yet: every admin_users row is equivalent for now.
+// RBAC is deferred until there is an actual, concrete need for it.
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("admin_users")
 }
