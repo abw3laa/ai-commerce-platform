@@ -13,6 +13,11 @@ const envSchema = z.object({
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),
+  // Required starting with Task 3: the Prisma driver adapter needs this
+  // explicitly in application code (Prisma 7 no longer wires it up from
+  // schema.prisma automatically). No default — a missing connection
+  // string must fail loudly at boot, not silently fall back to anything.
+  DATABASE_URL: z.string().min(1),
 });
 
 export type Env = z.infer<typeof envSchema>;

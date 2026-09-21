@@ -3,7 +3,15 @@
 
 generator client {
   provider     = "prisma-client"
-  output       = "../src/generated/prisma"
+  // Deliberately OUTSIDE src/ (and therefore outside dist/ too): tsc only
+  // compiles/copies files under src/**/*.ts into dist/, so a generated
+  // client living inside src/ would go missing from the compiled build.
+  // Keeping it as a sibling of src/ means the exact same relative import
+  // path resolves correctly whether the app runs from src/ (tsx, dev) or
+  // from dist/ (compiled, production) — both are the same depth from the
+  // repo root. Not exercised until Task 3, since Task 2 never imported
+  // the client from application code.
+  output       = "../generated/prisma"
   moduleFormat = "esm"
 }
 
@@ -22,5 +30,24 @@ model AdminUser {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  sessions AdminSession[]
+
   @@map("admin_users")
+}
+
+// Phase 1 / Task 3 — admin authentication sessions.
+// The raw session token is never stored: only its SHA-256 hash. The raw
+// token exists only in memory and in the HttpOnly cookie, so a database
+// leak alone can never hand out a usable session.
+model AdminSession {
+  id          String    @id @default(cuid())
+  adminUserId String    @map("admin_user_id")
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  tokenHash   String    @unique @map("token_hash")
+  expiresAt   DateTime  @map("expires_at")
+  revokedAt   DateTime? @map("revoked_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([adminUserId])
+  @@map("admin_sessions")
 }

@@ -3,7 +3,7 @@ import { loadEnv } from "./config/env.js";
 
 async function main(): Promise<void> {
   const env = loadEnv();
-  const app = buildApp(env);
+  const app = await buildApp(env);
 
   try {
     await app.listen({ host: env.HOST, port: env.PORT });
