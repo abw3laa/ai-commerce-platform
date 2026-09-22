@@ -13,6 +13,18 @@ generator client {
   // the client from application code.
   output       = "../generated/prisma"
   moduleFormat = "esm"
+  // Both explicit rather than left to inference: engineType/runtime are
+  // documented as optional with an inferred default, but a real Prisma
+  // issue (prisma/prisma#28073) shows that when inference resolves to
+  // anything other than engineType "client" + runtime "nodejs", the
+  // generated PrismaClientOptions type omits the `adapter` property
+  // entirely — `new PrismaClient({ adapter })` in src/db/client.ts then
+  // fails to typecheck with "'adapter' does not exist in type
+  // PrismaClientOptions". engineType "client" is also required to avoid
+  // needing the native query-engine binary at application runtime (only
+  // Prisma CLI commands like migrate still need it — see the CI workflow).
+  engineType   = "client"
+  runtime      = "nodejs"
 }
 
 datasource db {
