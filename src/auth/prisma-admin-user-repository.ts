@@ -1,4 +1,4 @@
-import type { PrismaClient } from "../generated/prisma/client.js";
+import type { PrismaClient } from "../../generated/prisma/client.js";
 import type { AdminUserRecord, AdminUserRepository } from "./types.js";
 
 /**
