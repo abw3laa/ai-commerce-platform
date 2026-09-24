@@ -10,7 +10,7 @@ async function appFor(permissions:string[]){
   const app=Fastify(),auth=createFakeAuthRepositories([{id:"admin-1",email:"owner@example.com",passwordHash:"unused",isActive:true}]);
   const token=generateSessionToken();
   await auth.adminSessionRepo.create({adminUserId:"admin-1",tokenHash:hashSessionToken(token),expiresAt:new Date(Date.now()+60000)});
-  const authorizationRepo:AuthorizationRepository={async getPermissionKeysForAdmin(){return permissions as any;}};
+  const authorizationRepo:AuthorizationRepository={async getPermissionKeysForAdmin(){return permissions as readonly string[];}};
   await app.register(adminProductsRoutes,{deps:auth,authorizationRepo,productRepo:createInMemoryProductRepository(),isProduction:false});
   return {app,token};
 }
