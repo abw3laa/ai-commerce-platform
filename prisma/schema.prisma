@@ -1,28 +1,10 @@
 // This is the Prisma schema file for the AI Commerce & Automation Platform.
-// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Learn more about it in the Prisma docs.
 
 generator client {
   provider     = "prisma-client"
-  // Deliberately OUTSIDE src/ (and therefore outside dist/ too): tsc only
-  // compiles/copies files under src/**/*.ts into dist/, so a generated
-  // client living inside src/ would go missing from the compiled build.
-  // Keeping it as a sibling of src/ means the exact same relative import
-  // path resolves correctly whether the app runs from src/ (tsx, dev) or
-  // from dist/ (compiled, production) — both are the same depth from the
-  // repo root. Not exercised until Task 3, since Task 2 never imported
-  // the client from application code.
   output       = "../generated/prisma"
   moduleFormat = "esm"
-  // Both explicit rather than left to inference: engineType/runtime are
-  // documented as optional with an inferred default, but a real Prisma
-  // issue (prisma/prisma#28073) shows that when inference resolves to
-  // anything other than engineType "client" + runtime "nodejs", the
-  // generated PrismaClientOptions type omits the `adapter` property
-  // entirely — `new PrismaClient({ adapter })` in src/db/client.ts then
-  // fails to typecheck with "'adapter' does not exist in type
-  // PrismaClientOptions". engineType "client" is also required to avoid
-  // needing the native query-engine binary at application runtime (only
-  // Prisma CLI commands like migrate still need it — see the CI workflow).
   engineType   = "client"
   runtime      = "nodejs"
 }
@@ -31,9 +13,7 @@ datasource db {
   provider = "postgresql"
 }
 
-// Phase 1 / Task 2 — foundation admin accounts only.
-// No roles/permissions yet: every admin_users row is equivalent for now.
-// RBAC is deferred until there is an actual, concrete need for it.
+// Task 2 — admin accounts.
 model AdminUser {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -43,14 +23,12 @@ model AdminUser {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   sessions AdminSession[]
+  roles    AdminUserRole[]
 
   @@map("admin_users")
 }
 
-// Phase 1 / Task 3 — admin authentication sessions.
-// The raw session token is never stored: only its SHA-256 hash. The raw
-// token exists only in memory and in the HttpOnly cookie, so a database
-// leak alone can never hand out a usable session.
+// Task 3 — session-based authentication.
 model AdminSession {
   id          String    @id @default(cuid())
   adminUserId String    @map("admin_user_id")
@@ -62,4 +40,54 @@ model AdminSession {
 
   @@index([adminUserId])
   @@map("admin_sessions")
+}
+
+// Task 4 — named roles that group permissions. Many-to-many keeps the
+// model extensible without coupling an admin to exactly one role.
+model Role {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  description String?
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  users       AdminUserRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+// Task 4 — one permission represents access to one bounded admin capability.
+// The key is stable application data (for example "products"), not a route.
+model Permission {
+  id          String          @id @default(cuid())
+  key         String          @unique
+  description String?
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model AdminUserRole {
+  adminUserId String    @map("admin_user_id")
+  roleId      String    @map("role_id")
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  role        Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([adminUserId, roleId])
+  @@index([roleId])
+  @@map("admin_user_roles")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id")
+  permissionId String     @map("permission_id")
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
 }
