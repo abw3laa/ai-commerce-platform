@@ -4,6 +4,8 @@ import { loadEnv, type Env } from "./config/env.js";
 import { healthRoutes } from "./routes/health.js";
 import { adminAuthRoutes } from "./routes/admin-auth.js";
 import type { AuthRepositories } from "./auth/types.js";
+import type { AuthorizationRepository } from "./auth/authorization-types.js";
+import { adminDashboardRoutes } from "./routes/admin-dashboard.js";
 
 /**
  * Builds (but does not start listening) a Fastify instance. Async because
@@ -33,6 +35,7 @@ export async function buildApp(
   app.register(healthRoutes);
 
   let resolvedDeps: AuthRepositories;
+  let authorizationRepo: AuthorizationRepository;
   if (deps) {
     resolvedDeps = deps;
   } else {
@@ -45,11 +48,12 @@ export async function buildApp(
     // does not exist locally (only in CI, where it is actually
     // generated). A static top-level import here would break every test
     // that imports buildApp, even ones that never use real Prisma.
-    const [{ createPrismaClient }, { createPrismaAdminUserRepository }, { createPrismaAdminSessionRepository }] =
+    const [{ createPrismaClient }, { createPrismaAdminUserRepository }, { createPrismaAdminSessionRepository }, { createPrismaAuthorizationRepository }] =
       await Promise.all([
         import("./db/client.js"),
         import("./auth/prisma-admin-user-repository.js"),
         import("./auth/prisma-admin-session-repository.js"),
+        import("./auth/prisma-authorization-repository.js"),
       ]);
 
     const { prisma, disconnect } = createPrismaClient(env.DATABASE_URL);
@@ -57,6 +61,9 @@ export async function buildApp(
       adminUserRepo: createPrismaAdminUserRepository(prisma),
       adminSessionRepo: createPrismaAdminSessionRepository(prisma),
     };
+    authorizationRepo = createPrismaAuthorizationRepository(prisma);
+    /*
+    */
     app.addHook("onClose", async () => {
       await disconnect();
     });
@@ -70,6 +77,15 @@ export async function buildApp(
     deps: resolvedDeps,
     isProduction: env.NODE_ENV === "production",
   });
+
+  if (!deps) {
+    await app.register(adminDashboardRoutes, {
+      prefix: "/admin",
+      deps: resolvedDeps,
+      authorizationRepo,
+      isProduction: env.NODE_ENV === "production",
+    });
+  }
 
   return app;
 }
