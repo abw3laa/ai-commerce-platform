@@ -103,7 +103,8 @@ describe("authorization guard", () => {
   it("returns 401 for an inactive admin even when the session is valid", async () => {
     const app = await build(["products"]);
     const admin = auth.adminUserRepo.users[0];
-    admin.isActive = false;
+    expect(admin).toBeDefined();
+    admin!.isActive = false;
 
     const response = await app.inject({
       method: "GET",
