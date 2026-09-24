@@ -1,11 +1,9 @@
 # AI Commerce & Automation Platform — backend service
 
-Status: **Phase 1 / Task 3 — admin authentication.** Tasks 1 (walking
-skeleton) and 2 (`admin_users` model + first migration) are complete.
-This task adds real login/logout/session handling for admin accounts.
-Still intentionally out of scope: roles/permissions, an actual admin
-panel UI, and anything about products, orders, WhatsApp, or the AI core
-— those are separate, later tasks.
+Status: **Phase 1 / Task 5 — basic admin dashboard.** Tasks 1–4 (foundation,
+admin authentication, and RBAC) are complete. This task adds the first
+protected server-rendered admin dashboard. Products, orders, WhatsApp,
+and the AI core remain separate later tasks.
 
 ## Stack decisions made so far (see project chat log for full reasoning)
 
@@ -60,6 +58,7 @@ npm run build && npm start  # compiled production build
 - `npm run test:unit` — only `tests/unit/` — no database required
 - `npm run typecheck` — TypeScript, no emit
 - `npm run lint` — ESLint
+- `npm run seed:rbac` — idempotently create the current RBAC permissions and `super_admin` role
 
 ### Creating the first admin account
 
@@ -140,9 +139,16 @@ zero fakes anywhere) needs a real, migrated PostgreSQL and only runs in
 CI — which is also where `prisma generate`/`migrate deploy`/`typecheck`/
 `build` get their real, authoritative verification for the same reason.
 
+## Current admin panel
+
+`GET /admin/dashboard` is protected by the session authentication guard and
+renders a small server-side dashboard. It shows the authenticated admin,
+current inherited permissions, platform status, and a logout action. The
+page sends `Cache-Control: no-store` and a restrictive Content Security
+Policy. It intentionally contains no product/order/WhatsApp/AI features.
+
 ## Not built yet (upcoming tasks, in the agreed phase order)
 
-Roles/permissions (RBAC), the admin panel UI, backup script, then
-products/inventory/offers, then the WhatsApp connector (Baileys), then
-the AI core, then orders/payment, then shipping — each as its own small
-task with its own tests, per the agreed working method.
+Products/inventory/offers, then customers/orders, payments/shipping, the
+WhatsApp connector (Baileys), the AI core, automation/reporting, and later
+production hardening — each as its own small task with its own tests.
