@@ -152,3 +152,4 @@ Policy. It intentionally contains no product/order/WhatsApp/AI features.
 Products/inventory/offers, then customers/orders, payments/shipping, the
 WhatsApp connector (Baileys), the AI core, automation/reporting, and later
 production hardening — each as its own small task with its own tests.
+
