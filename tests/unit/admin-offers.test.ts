@@ -10,14 +10,14 @@ function fakeOfferRepo():OfferRepository{
  const data:OfferRecord[]=[];
  return {
   async list(){return data;},
-  async create(i){const r:any={id:"offer-1",...i,isActive:true,startsAt:i.startsAt??null,endsAt:i.endsAt??null,items:i.items};data.push(r);return r;},
+  async create(i){const r:OfferRecord={id:"offer-1",name:i.name,code:i.code,description:i.description??null,price:i.price,quantity:i.quantity,isActive:true,startsAt:i.startsAt??null,endsAt:i.endsAt??null,items:i.items};data.push(r);return r;},
   async update(){return data[0]??null;}
  };
 }
 async function setup(perms:string[]){
  const app=Fastify(),auth=createFakeAuthRepositories([{id:"a1",email:"o@example.com",passwordHash:"x",isActive:true}]),token=generateSessionToken();
  await auth.adminSessionRepo.create({adminUserId:"a1",tokenHash:hashSessionToken(token),expiresAt:new Date(Date.now()+60000)});
- const authorizationRepo:AuthorizationRepository={async getPermissionKeysForAdmin(){return perms as any;}};
+ const authorizationRepo:AuthorizationRepository={async getPermissionKeysForAdmin(){return perms as readonly string[];}};
  await app.register(adminOffersRoutes,{deps:auth,authorizationRepo,offerRepo:fakeOfferRepo(),isProduction:false});
  return {app,token};
 }
