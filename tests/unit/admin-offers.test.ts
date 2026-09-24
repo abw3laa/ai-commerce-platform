@@ -17,7 +17,7 @@ function fakeOfferRepo():OfferRepository{
 async function setup(perms:string[]){
  const app=Fastify(),auth=createFakeAuthRepositories([{id:"a1",email:"o@example.com",passwordHash:"x",isActive:true}]),token=generateSessionToken();
  await auth.adminSessionRepo.create({adminUserId:"a1",tokenHash:hashSessionToken(token),expiresAt:new Date(Date.now()+60000)});
- const authorizationRepo:AuthorizationRepository={async getPermissionKeysForAdmin(){return perms as readonly string[];}};
+ const authorizationRepo:AuthorizationRepository={async getPermissionKeysForAdmin(){return [...perms] as ("products"|"inventory"|"orders"|"customers"|"payments"|"shipping"|"conversations"|"settings"|"users/permissions")[];}};
  await app.register(adminOffersRoutes,{deps:auth,authorizationRepo,offerRepo:fakeOfferRepo(),isProduction:false});
  return {app,token};
 }
