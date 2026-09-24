@@ -35,7 +35,7 @@ export async function buildApp(
   app.register(healthRoutes);
 
   let resolvedDeps: AuthRepositories;
-  let authorizationRepo: AuthorizationRepository;
+  let authorizationRepo: AuthorizationRepository | undefined;
   if (deps) {
     resolvedDeps = deps;
   } else {
@@ -77,6 +77,10 @@ export async function buildApp(
   });
 
   if (!deps) {
+    if (!authorizationRepo) {
+      throw new Error("Authorization repository was not initialized");
+    }
+
     await app.register(adminDashboardRoutes, {
       prefix: "/admin",
       deps: resolvedDeps,
