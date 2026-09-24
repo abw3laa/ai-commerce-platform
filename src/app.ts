@@ -6,6 +6,7 @@ import { adminAuthRoutes } from "./routes/admin-auth.js";
 import type { AuthRepositories } from "./auth/types.js";
 import type { AuthorizationRepository } from "./auth/authorization-types.js";
 import { adminDashboardRoutes } from "./routes/admin-dashboard.js";
+import { adminProductsRoutes } from "./routes/admin-products.js";
 
 /**
  * Builds (but does not start listening) a Fastify instance. Async because
@@ -36,6 +37,7 @@ export async function buildApp(
 
   let resolvedDeps: AuthRepositories;
   let authorizationRepo: AuthorizationRepository | undefined;
+  let productRepo: import("./catalog/types.js").ProductRepository | undefined;
   if (deps) {
     resolvedDeps = deps;
   } else {
@@ -48,12 +50,13 @@ export async function buildApp(
     // does not exist locally (only in CI, where it is actually
     // generated). A static top-level import here would break every test
     // that imports buildApp, even ones that never use real Prisma.
-    const [{ createPrismaClient }, { createPrismaAdminUserRepository }, { createPrismaAdminSessionRepository }, { createPrismaAuthorizationRepository }] =
+    const [{ createPrismaClient }, { createPrismaAdminUserRepository }, { createPrismaAdminSessionRepository }, { createPrismaAuthorizationRepository }, { createPrismaProductRepository }] =
       await Promise.all([
         import("./db/client.js"),
         import("./auth/prisma-admin-user-repository.js"),
         import("./auth/prisma-admin-session-repository.js"),
         import("./auth/prisma-authorization-repository.js"),
+        import("./catalog/prisma-product-repository.js"),
       ]);
 
     const { prisma, disconnect } = createPrismaClient(env.DATABASE_URL);
@@ -62,6 +65,7 @@ export async function buildApp(
       adminSessionRepo: createPrismaAdminSessionRepository(prisma),
     };
     authorizationRepo = createPrismaAuthorizationRepository(prisma);
+    productRepo = createPrismaProductRepository(prisma);
     app.addHook("onClose", async () => {
       await disconnect();
     });
@@ -85,6 +89,17 @@ export async function buildApp(
       prefix: "/admin",
       deps: resolvedDeps,
       authorizationRepo,
+      isProduction: env.NODE_ENV === "production",
+    });
+
+    if (!productRepo) {
+      throw new Error("Product repository was not initialized");
+    }
+    await app.register(adminProductsRoutes, {
+      prefix: "/admin",
+      deps: resolvedDeps,
+      authorizationRepo,
+      productRepo,
       isProduction: env.NODE_ENV === "production",
     });
   }
