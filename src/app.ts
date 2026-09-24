@@ -39,7 +39,7 @@ export async function buildApp(
   if (deps) {
     resolvedDeps = deps;
   } else {
-    // Imported dynamically and only on this branch: these three modules
+    // Imported dynamically and only on this branch: these four modules
     // are the only ones in the whole app that touch the generated Prisma
     // client. Any test that supplies fake `deps` above never reaches this
     // branch, so it never triggers module resolution for the generated
@@ -62,8 +62,6 @@ export async function buildApp(
       adminSessionRepo: createPrismaAdminSessionRepository(prisma),
     };
     authorizationRepo = createPrismaAuthorizationRepository(prisma);
-    /*
-    */
     app.addHook("onClose", async () => {
       await disconnect();
     });
