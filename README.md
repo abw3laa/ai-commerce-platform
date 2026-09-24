@@ -139,7 +139,7 @@ zero fakes anywhere) needs a real, migrated PostgreSQL and only runs in
 CI — which is also where `prisma generate`/`migrate deploy`/`typecheck`/
 `build` get their real, authoritative verification for the same reason.
 
-## Products, inventory, and offers\n\nThe admin API now exposes protected catalog endpoints under `/admin`: product\nlist/create/update, variant stock updates, and bundle offer list/create/update.\n`products` permission controls catalog and offers; `inventory` controls stock\nchanges. Prices are stored as integer minor units to avoid floating-point\nmoney errors. Media upload/storage is intentionally deferred until the storage\ntask is defined.\n\n## Current admin panel
+## Products, inventory, and offers\n\nThe admin API now exposes protected catalog endpoints under `/admin`: product\nlist/create/update, variant stock updates, and bundle offer list/create/update.\n`products` permission controls catalog and offers; `inventory` controls stock\nchanges. Prices are stored as integer currency units in this first catalog task;\nprecision beyond whole units is intentionally deferred. Media upload/storage is intentionally deferred until the storage\ntask is defined.\n\n## Current admin panel
 
 `GET /admin/dashboard` is protected by the session authentication guard and
 renders a small server-side dashboard. It shows the authenticated admin,
