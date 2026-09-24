@@ -12,7 +12,8 @@
     "test:unit": "vitest run tests/unit",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "seed:rbac": "tsx src/scripts/seed-rbac.ts"
   },
   "keywords": [],
   "author": "",
