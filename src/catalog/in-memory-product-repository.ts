@@ -11,7 +11,7 @@ export function createInMemoryProductRepository(seed:ProductWithVariants[]=[]):P
       const now=new Date(), id="product-"+(products.length+1);
       const product:ProductWithVariants={id,name:input.name,description:input.description??null,productCode:input.productCode,
         price:input.price,cost:input.cost??null,currency:input.currency,isActive:true,createdAt:now,updatedAt:now,variants:[]};
-      product.variants=(input.variants??[]).map((v,i)=>({id:"variant-"+(products.length+1)+"-"+(i+1),productId:id,...v}));
+      product.variants=(input.variants??[]).map((v,i)=>({id:"variant-"+(products.length+1)+"-"+(i+1),productId:id,sku:v.sku,size:v.size??null,color:v.color??null,stockQuantity:v.stockQuantity,priceOverride:v.priceOverride??null}));
       products.push(product); return copy(product);
     },
     async update(id,input){
