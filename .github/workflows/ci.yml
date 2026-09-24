@@ -13,12 +13,8 @@ jobs:
   verify:
     name: Typecheck, lint, test, build (with Postgres + Prisma)
     runs-on: ubuntu-latest
-    # issues: write is only for the TEMPORARY debug step below; everything
-    # else here only needs the default read access. Removed again once
-    # the actual test failure is diagnosed.
     permissions:
       contents: read
-      issues: write
 
     # Temporary PostgreSQL container for this job only — it lives for the
     # duration of the run and is discarded afterwards. Nothing here depends
@@ -82,45 +78,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      # TEMPORARY: capture Test's real output on failure and post it as a
-      # GitHub issue via the job's own built-in token — the same working
-      # technique used earlier to diagnose the Typecheck failure, since
-      # this sandbox still cannot reach CI's raw logs (blob-storage
-      # redirect) or run any Prisma command itself to reproduce this
-      # locally. Removed once the real failure is confirmed and fixed.
       - name: Test
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set +e
-          npm test > /tmp/test-output.txt 2>&1
-          STATUS=$?
-          cat /tmp/test-output.txt
-          if [ $STATUS -ne 0 ]; then
-            python3 -c "
-          import json, os, urllib.request
-          body = open('/tmp/test-output.txt').read()
-          if len(body) > 60000:
-              body = body[-60000:]
-          payload = json.dumps({
-              'title': 'TEMP CI DEBUG: npm test output (' + os.environ['GITHUB_SHA'][:9] + ')',
-              'body': '\`\`\`\n' + body + '\n\`\`\`',
-          }).encode()
-          req = urllib.request.Request(
-              'https://api.github.com/repos/${{ github.repository }}/issues',
-              data=payload,
-              method='POST',
-              headers={
-                  'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
-                  'Accept': 'application/vnd.github+json',
-                  'Content-Type': 'application/json',
-              },
-          )
-          with urllib.request.urlopen(req) as resp:
-              print('issue created:', json.load(resp)['html_url'])
-          "
-          fi
-          exit $STATUS
+        run: npm test
 
       - name: Build
         run: npm run build
