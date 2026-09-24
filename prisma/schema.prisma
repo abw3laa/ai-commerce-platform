@@ -3,8 +3,28 @@
 
 generator client {
   provider     = "prisma-client"
-  output       = "../src/generated/prisma"
+  // Deliberately OUTSIDE src/ (and therefore outside dist/ too): tsc only
+  // compiles/copies files under src/**/*.ts into dist/, so a generated
+  // client living inside src/ would go missing from the compiled build.
+  // Keeping it as a sibling of src/ means the exact same relative import
+  // path resolves correctly whether the app runs from src/ (tsx, dev) or
+  // from dist/ (compiled, production) — both are the same depth from the
+  // repo root. Not exercised until Task 3, since Task 2 never imported
+  // the client from application code.
+  output       = "../generated/prisma"
   moduleFormat = "esm"
+  // Both explicit rather than left to inference: engineType/runtime are
+  // documented as optional with an inferred default, but a real Prisma
+  // issue (prisma/prisma#28073) shows that when inference resolves to
+  // anything other than engineType "client" + runtime "nodejs", the
+  // generated PrismaClientOptions type omits the `adapter` property
+  // entirely — `new PrismaClient({ adapter })` in src/db/client.ts then
+  // fails to typecheck with "'adapter' does not exist in type
+  // PrismaClientOptions". engineType "client" is also required to avoid
+  // needing the native query-engine binary at application runtime (only
+  // Prisma CLI commands like migrate still need it — see the CI workflow).
+  engineType   = "client"
+  runtime      = "nodejs"
 }
 
 datasource db {
@@ -22,5 +42,24 @@ model AdminUser {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  sessions AdminSession[]
+
   @@map("admin_users")
+}
+
+// Phase 1 / Task 3 — admin authentication sessions.
+// The raw session token is never stored: only its SHA-256 hash. The raw
+// token exists only in memory and in the HttpOnly cookie, so a database
+// leak alone can never hand out a usable session.
+model AdminSession {
+  id          String    @id @default(cuid())
+  adminUserId String    @map("admin_user_id")
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  tokenHash   String    @unique @map("token_hash")
+  expiresAt   DateTime  @map("expires_at")
+  revokedAt   DateTime? @map("revoked_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([adminUserId])
+  @@map("admin_sessions")
 }

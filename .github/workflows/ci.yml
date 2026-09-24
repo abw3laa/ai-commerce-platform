@@ -13,6 +13,8 @@ jobs:
   verify:
     name: Typecheck, lint, test, build (with Postgres + Prisma)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     # Temporary PostgreSQL container for this job only — it lives for the
     # duration of the run and is discarded afterwards. Nothing here depends
@@ -63,13 +65,11 @@ jobs:
           echo "PostgreSQL did not become ready in time" >&2
           exit 1
 
-      # No migrations exist yet at this stage of the project (see
-      # prisma/migrations — intentionally empty). `migrate deploy` is the
-      # non-interactive command meant for CI/production: it applies
-      # whatever committed migrations exist and does nothing if there are
-      # none. It must NOT be used to silently create a migration, which is
-      # exactly the behavior we want to verify here.
-      - name: Apply Prisma migrations (none expected yet)
+      # `migrate deploy` is the non-interactive command meant for CI/
+      # production: it applies whatever committed migrations exist
+      # (admin_users, then admin_sessions as of Task 3) and does nothing
+      # if there are none — it must NOT be used to create a migration.
+      - name: Apply Prisma migrations
         run: npx prisma migrate deploy
 
       - name: Typecheck

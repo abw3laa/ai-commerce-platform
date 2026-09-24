@@ -1,9 +1,25 @@
-import { describe, it, expect, afterAll } from "vitest";
+import { describe, it, expect, afterAll, beforeAll } from "vitest";
+import type { FastifyInstance } from "fastify";
 import { buildApp } from "../src/app.js";
 import { loadEnv } from "../src/config/env.js";
+import { createFakeAuthRepositories } from "./helpers/fake-repositories.js";
 
 describe("GET /health", () => {
-  const app = buildApp(loadEnv({ NODE_ENV: "test", LOG_LEVEL: "silent" } as NodeJS.ProcessEnv));
+  let app: FastifyInstance;
+
+  beforeAll(async () => {
+    // Fake auth repositories: this route does not touch the database at
+    // all, and using fakes here means this test never needs the real
+    // Prisma client (see app.ts for why that matters in this sandbox).
+    app = await buildApp(
+      loadEnv({
+        NODE_ENV: "test",
+        LOG_LEVEL: "silent",
+        DATABASE_URL: "unused-in-this-test",
+      } as NodeJS.ProcessEnv),
+      createFakeAuthRepositories(),
+    );
+  });
 
   afterAll(async () => {
     await app.close();
