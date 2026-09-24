@@ -106,6 +106,16 @@ export async function buildApp(
       productRepo,
       isProduction: env.NODE_ENV === "production",
     });
+    if (!offerRepo) {
+      throw new Error("Offer repository was not initialized");
+    }
+    await app.register(adminOffersRoutes, {
+      prefix: "/admin",
+      deps: resolvedDeps,
+      authorizationRepo,
+      offerRepo,
+      isProduction: env.NODE_ENV === "production",
+    });
   }
 
   return app;
