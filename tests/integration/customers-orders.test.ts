@@ -1,0 +1,13 @@
+import {describe,it,expect,beforeAll,afterAll,beforeEach} from "vitest";
+import {loadEnv} from "../../src/config/env.js";
+import {createPrismaClient,type PrismaConnection} from "../../src/db/client.js";
+import {createPrismaCustomerRepository} from "../../src/customers/prisma-customer-repository.js";
+import {createPrismaOrderRepository} from "../../src/orders/prisma-order-repository.js";
+import {createPrismaProductRepository} from "../../src/catalog/prisma-product-repository.js";
+describe("Task 7 Prisma customer/order repositories",()=>{let c:PrismaConnection;
+beforeAll(()=>{c=createPrismaClient(loadEnv().DATABASE_URL);});
+afterAll(async()=>{await c.disconnect();});
+beforeEach(async()=>{await c.prisma.orderItem.deleteMany({});await c.prisma.order.deleteMany({});await c.prisma.customer.deleteMany({});await c.prisma.productVariant.deleteMany({where:{sku:{startsWith:"CI-T7-"}}});await c.prisma.product.deleteMany({where:{productCode:{startsWith:"CI-T7-"}}});});
+it("creates and updates a customer",async()=>{const repo=createPrismaCustomerRepository(c.prisma);const x=await repo.create({name:"CI Customer",phone:"+900000000001"});expect(x.name).toBe("CI Customer");const y=await repo.update(x.id,{address:"Test address"});expect(y?.address).toBe("Test address");});
+it("creates an order from product/variant snapshots and enforces status transitions",async()=>{const customers=createPrismaCustomerRepository(c.prisma),products=createPrismaProductRepository(c.prisma),orders=createPrismaOrderRepository(c.prisma);const customer=await customers.create({name:"CI Order Customer",phone:"+900000000002"});const product=await products.create({name:"CI Shirt",productCode:"CI-T7-SHIRT",price:1500,currency:"TRY",variants:[{sku:"CI-T7-M",size:"M",color:"Black",stockQuantity:5,priceOverride:1400}]});const order=await orders.create({orderNumber:"CI-T7-ORDER",customerId:customer.id,items:[{productId:product.id,variantId:product.variants[0].id,quantity:2}]});expect(order.status).toBe("received");expect(order.total).toBe(2800);expect(order.items[0].productName).toBe("CI Shirt");expect((await orders.updateStatus(order.id,"review"))).not.toHaveProperty("error");expect((await orders.updateStatus(order.id,"preparing"))).not.toHaveProperty("error");expect((await orders.updateStatus(order.id,"shipped"))).not.toHaveProperty("error");expect(await orders.updateStatus(order.id,"cancelled")).toEqual({error:"invalid_transition"});});
+});
