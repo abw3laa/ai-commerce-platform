@@ -12,6 +12,7 @@ import { adminCustomersRoutes } from "./routes/admin-customers.js";
 import { adminOrdersRoutes } from "./routes/admin-orders.js";
 import { adminPaymentsRoutes } from "./routes/admin-payments.js";
 import { adminShippingRoutes } from "./routes/admin-shipping.js";
+import { adminWhatsAppRoutes } from "./routes/admin-whatsapp.js";
 
 /**
  * Builds (but does not start listening) a Fastify instance. Async because
@@ -48,6 +49,7 @@ export async function buildApp(
   let orderRepo: import("./orders/types.js").OrderRepository | undefined;
   let paymentRepo: import("./payments/types.js").PaymentRepository | undefined;
   let shipmentRepo: import("./shipping/types.js").ShipmentRepository | undefined;
+  let conversationRepo: import("./conversations/types.js").ConversationRepository | undefined;
   if (deps) {
     resolvedDeps = deps;
   } else {
@@ -60,7 +62,7 @@ export async function buildApp(
     // does not exist locally (only in CI, where it is actually
     // generated). A static top-level import here would break every test
     // that imports buildApp, even ones that never use real Prisma.
-    const [{ createPrismaClient }, { createPrismaAdminUserRepository }, { createPrismaAdminSessionRepository }, { createPrismaAuthorizationRepository }, { createPrismaProductRepository }, { createPrismaOfferRepository }, { createPrismaCustomerRepository }, { createPrismaOrderRepository }, { createPrismaPaymentRepository }, { createPrismaShipmentRepository }] =
+    const [{ createPrismaClient }, { createPrismaAdminUserRepository }, { createPrismaAdminSessionRepository }, { createPrismaAuthorizationRepository }, { createPrismaProductRepository }, { createPrismaOfferRepository }, { createPrismaCustomerRepository }, { createPrismaOrderRepository }, { createPrismaPaymentRepository }, { createPrismaShipmentRepository }, { createPrismaConversationRepository }] =
       await Promise.all([
         import("./db/client.js"),
         import("./auth/prisma-admin-user-repository.js"),
@@ -72,6 +74,7 @@ export async function buildApp(
         import("./orders/prisma-order-repository.js"),
         import("./payments/prisma-payment-repository.js"),
         import("./shipping/prisma-shipment-repository.js"),
+        import("./conversations/prisma-conversation-repository.js"),
       ]);
 
     const { prisma, disconnect } = createPrismaClient(env.DATABASE_URL);
@@ -86,6 +89,7 @@ export async function buildApp(
     orderRepo = createPrismaOrderRepository(prisma);
     paymentRepo = createPrismaPaymentRepository(prisma);
     shipmentRepo = createPrismaShipmentRepository(prisma);
+    conversationRepo = createPrismaConversationRepository(prisma);
     app.addHook("onClose", async () => {
       await disconnect();
     });
@@ -140,6 +144,32 @@ export async function buildApp(
     await app.register(adminPaymentsRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,paymentRepo,isProduction:env.NODE_ENV==="production"});
     if (!shipmentRepo) throw new Error("Shipment repository was not initialized");
     await app.register(adminShippingRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,shipmentRepo,isProduction:env.NODE_ENV==="production"});
+    if (!conversationRepo) throw new Error("Conversation repository was not initialized");
+    const { createBaileysConnector } = await import("./whatsapp/baileys-connector.js");
+    const whatsapp = createBaileysConnector({authDirectory:env.WHATSAPP_AUTH_DIR});
+    await app.register(adminWhatsAppRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,conversationRepo,connector:whatsapp,isProduction:env.NODE_ENV==="production"});
+    if (!customerRepo) throw new Error("Customer repository was not initialized");
+    const customerRepository = customerRepo;
+    const conversationRepository = conversationRepo;
+    await whatsapp.onText(async (message) => {
+      const from = message.from;
+      const to = message.to;
+      const externalId = message.externalId;
+      const body = message.body;
+      const phone = from.split("@")[0] ?? from;
+      let customer = await customerRepository.getByPhone(phone);
+      if (!customer) {
+        try {
+          customer = await customerRepository.create({name:phone,phone});
+        } catch {
+          customer = await customerRepository.getByPhone(phone);
+        }
+      }
+      const customerId = customer ? customer.id : null;
+      const conversation = await conversationRepository.getOrCreate(from, customerId);
+      await conversationRepository.addMessage({conversationId:conversation.id,externalId,direction:"inbound",body,fromAddress:from,toAddress:to});
+    });
+    await whatsapp.connect();
   }
 
   return app;

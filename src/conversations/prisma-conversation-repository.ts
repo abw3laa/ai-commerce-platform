@@ -1,0 +1,6 @@
+import type {PrismaClient} from "../../generated/prisma/client.js";import type {ConversationRepository,ConversationRecord,ConversationMessageRecord} from "./types.js";
+export function createPrismaConversationRepository(prisma:PrismaClient):ConversationRepository{return{
+async getOrCreate(externalId,customerId=null){return prisma.conversation.upsert({where:{externalId},create:{externalId,customerId,lastMessageAt:null},update:customerId?{customerId}:{}}) as unknown as Promise<ConversationRecord>;},
+async addMessage(i){const now=new Date();const message=await prisma.conversationMessage.create({data:{conversationId:i.conversationId,externalId:i.externalId,direction:i.direction,messageType:i.messageType??"text",body:i.body??null,fromAddress:i.fromAddress??null,toAddress:i.toAddress??null}});await prisma.conversation.update({where:{id:i.conversationId},data:{lastMessageAt:now}});return message as unknown as ConversationMessageRecord;},
+async listMessages(conversationId,limit){return prisma.conversationMessage.findMany({where:{conversationId},orderBy:{createdAt:"desc"},take:limit}) as unknown as Promise<ConversationMessageRecord[]>;}
+};}

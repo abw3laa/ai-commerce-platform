@@ -1,0 +1,11 @@
+import {describe,it,expect} from "vitest";
+import Fastify from "fastify";
+import {adminWhatsAppRoutes} from "../../src/routes/admin-whatsapp.js";
+import {createFakeAuthRepositories} from "../helpers/fake-repositories.js";
+import {generateSessionToken,hashSessionToken} from "../../src/auth/session-token.js";
+import type {AuthorizationRepository} from "../../src/auth/authorization-types.js";
+import {createInMemoryConversationRepository} from "../../src/conversations/in-memory-conversation-repository.js";
+import type {WhatsAppConnector} from "../../src/whatsapp/types.js";
+
+async function setup(perms:string[]){const app=Fastify(),auth=createFakeAuthRepositories([{id:"a1",email:"t@example.com",passwordHash:"x",isActive:true}]),token=generateSessionToken();await auth.adminSessionRepo.create({adminUserId:"a1",tokenHash:hashSessionToken(token),expiresAt:new Date(Date.now()+60000)});const authorizationRepo:AuthorizationRepository={async getPermissionKeysForAdmin(){return [...perms] as never;}};const connector:WhatsAppConnector={connect:async()=>{},close:async()=>{},getConnection:()=>({status:"connected",phoneNumber:"905000000000"}),onText:async()=>{},sendText:async()=>({externalId:"wamid-out-1"})};const conversations=createInMemoryConversationRepository();await app.register(adminWhatsAppRoutes,{deps:auth,authorizationRepo,conversationRepo:conversations,connector,isProduction:false});return{app,token,conversations};}
+describe("admin WhatsApp",()=>{it("requires conversations permission",async()=>{const x=await setup([]);const r=await x.app.inject({method:"GET",url:"/whatsapp/status",headers:{cookie:"admin_session="+x.token}});expect(r.statusCode).toBe(403);await x.app.close();});it("sends and persists outbound text",async()=>{const x=await setup(["conversations"]);const r=await x.app.inject({method:"POST",url:"/whatsapp/send",headers:{cookie:"admin_session="+x.token},payload:{to:"905000000000@s.whatsapp.net",body:"Hello"}});expect(r.statusCode).toBe(200);const c=await x.conversations.getOrCreate("905000000000@s.whatsapp.net");expect((await x.conversations.listMessages(c.id,10))[0]?.body).toBe("Hello");await x.app.close();});});
