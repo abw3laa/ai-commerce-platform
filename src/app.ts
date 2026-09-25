@@ -146,7 +146,7 @@ export async function buildApp(
     await app.register(adminShippingRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,shipmentRepo,isProduction:env.NODE_ENV==="production"});
     if (!conversationRepo) throw new Error("Conversation repository was not initialized");
     const { createBaileysConnector } = await import("./whatsapp/baileys-connector.js");
-    const whatsapp = createBaileysConnector({authDirectory:"./data/whatsapp-auth"});
+    const whatsapp = createBaileysConnector({authDirectory:env.WHATSAPP_AUTH_DIR});
     await app.register(adminWhatsAppRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,conversationRepo,connector:whatsapp,isProduction:env.NODE_ENV==="production"});
     if (!customerRepo) throw new Error("Customer repository was not initialized");
     await whatsapp.onText(async (message) => {
@@ -158,6 +158,7 @@ export async function buildApp(
       const conversation = await conversationRepo.getOrCreate(message.from, customer?.id ?? null);
       await conversationRepo.addMessage({conversationId:conversation.id,externalId:message.externalId,direction:"inbound",body:message.body,fromAddress:message.from,toAddress:message.to});
     });
+    await whatsapp.connect();
   }
 
   return app;
