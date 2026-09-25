@@ -23,9 +23,10 @@ import {channelWebhookRoutes} from "./routes/channel-webhooks.js";
 import {createMetrics,metricsText} from "./ops/metrics.js";
 export async function buildApp(env:Env=loadEnv(),deps?:AuthRepositories):Promise<FastifyInstance>{
  const metrics=createMetrics();
+ const requestStartedAt=new WeakMap<object,number>();
  const app=env.NODE_ENV==="development"?Fastify({logger:{level:env.LOG_LEVEL,transport:{target:"pino-pretty",options:{colorize:true}}}}):Fastify({logger:{level:env.LOG_LEVEL}});
- app.addHook("onRequest",async()=>{metrics.requests++;});
- app.addHook("onResponse",async(request,reply)=>{metrics.requestDurationMs+=reply.getResponseTime();if(reply.statusCode>=500)metrics.errors++;});
+ app.addHook("onRequest",async(request)=>{metrics.requests++;requestStartedAt.set(request,Date.now());});
+ app.addHook("onResponse",async(request,reply)=>{metrics.requestDurationMs+=Date.now()-(requestStartedAt.get(request)??Date.now());if(reply.statusCode>=500)metrics.errors++;requestStartedAt.delete(request);});
  app.get("/metrics",async(_request,reply)=>reply.type("text/plain; version=0.0.4").send(metricsText(metrics)));
  app.addContentTypeParser("application/octet-stream",{parseAs:"buffer"},(_req,body,done)=>done(null,body));
  app.register(healthRoutes);
