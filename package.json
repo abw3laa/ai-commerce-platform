@@ -13,7 +13,10 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "seed:rbac": "tsx src/scripts/seed-rbac.ts"
+    "seed:rbac": "tsx src/scripts/seed-rbac.ts",
+    "backup:db": "./scripts/backup-postgres.sh",
+    "restore:db": "./scripts/restore-postgres.sh",
+    "verify:production": "./scripts/verify-production.sh"
   },
   "keywords": [],
   "author": "",

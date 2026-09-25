@@ -16,4 +16,5 @@ COPY --from=build /app/src ./src
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/prisma.config.ts ./
 EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=5 CMD node -e "fetch('http://127.0.0.1:3000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
 CMD ["sh","-c","npx prisma migrate deploy && npx tsx src/scripts/seed-rbac.ts && node dist/server.js"]
