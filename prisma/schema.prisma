@@ -258,6 +258,11 @@ model Conversation {
   id String @id @default(cuid())
   customerId String? @map("customer_id")
   channel String @default("whatsapp")
+  status String @default("open")
+  assignedAdminUserId String? @map("assigned_admin_user_id")
+  handoffReason String? @map("handoff_reason")
+  summary String?
+  summaryUpdatedAt DateTime? @map("summary_updated_at")
   externalId String @unique @map("external_id")
   lastMessageAt DateTime? @map("last_message_at")
   createdAt DateTime @default(now()) @map("created_at")
@@ -266,6 +271,8 @@ model Conversation {
   messages ConversationMessage[]
   @@index([customerId])
   @@index([channel])
+  @@index([status])
+  @@index([assignedAdminUserId])
   @@map("conversations")
 }
 
@@ -282,4 +289,16 @@ model ConversationMessage {
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   @@index([conversationId, createdAt])
   @@map("conversation_messages")
+}
+
+model KnowledgeArticle {
+  id String @id @default(cuid())
+  title String
+  content String
+  tags String[] @default([])
+  isActive Boolean @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@index([isActive])
+  @@map("knowledge_articles")
 }

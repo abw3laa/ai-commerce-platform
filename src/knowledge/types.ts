@@ -1,0 +1,2 @@
+export interface KnowledgeArticle{id:string;title:string;content:string;tags:string[];isActive:boolean;createdAt:Date;updatedAt:Date;}
+export interface KnowledgeRepository{list(activeOnly?:boolean):Promise<KnowledgeArticle[]>;search(query:string,limit:number):Promise<KnowledgeArticle[]>;create(input:{title:string;content:string;tags?:string[]}):Promise<KnowledgeArticle>;update(id:string,input:Partial<{title:string;content:string;tags:string[];isActive:boolean}>):Promise<KnowledgeArticle|null>;delete(id:string):Promise<boolean>;}
