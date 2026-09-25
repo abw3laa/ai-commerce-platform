@@ -13,6 +13,7 @@ import { adminOrdersRoutes } from "./routes/admin-orders.js";
 import { adminPaymentsRoutes } from "./routes/admin-payments.js";
 import { adminShippingRoutes } from "./routes/admin-shipping.js";
 import { adminWhatsAppRoutes } from "./routes/admin-whatsapp.js";
+import { adminAiRoutes } from "./routes/admin-ai.js";
 
 /**
  * Builds (but does not start listening) a Fastify instance. Async because
@@ -170,6 +171,16 @@ export async function buildApp(
       await conversationRepository.addMessage({conversationId:conversation.id,externalId,direction:"inbound",body,fromAddress:from,toAddress:to});
     });
     await whatsapp.connect();
+
+    if (!productRepo || !orderRepo || !paymentRepo || !shipmentRepo || !authorizationRepo) throw new Error("AI dependencies were not initialized");
+    const { createCommerceTools } = await import("./ai/tools.js");
+    const { createCommerceEngine } = await import("./ai/engine.js");
+    const { createOpenAiCompatibleProvider } = await import("./ai/openai-compatible-provider.js");
+    const provider = env.AI_API_URL && env.AI_API_KEY
+      ? createOpenAiCompatibleProvider({url:env.AI_API_URL,apiKey:env.AI_API_KEY,model:env.AI_MODEL})
+      : { complete: async () => { throw new Error("ai_provider_not_configured"); } };
+    const engine = createCommerceEngine(provider, createCommerceTools({products:productRepo,orders:orderRepo,payments:paymentRepo,shipping:shipmentRepo}));
+    await app.register(adminAiRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,engine,isProduction:env.NODE_ENV==="production"});
   }
 
   return app;
