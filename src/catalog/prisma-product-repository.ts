@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { PrismaClient } from "../../generated/prisma/client.js";
 import type { ProductRepository, ProductRecord, ProductVariantRecord } from "./types.js";
 type ProductRow={id:string;name:string;description:string|null;productCode:string;price:number;cost:number|null;currency:string;isActive:boolean;categoryId:string|null;createdAt:Date;updatedAt:Date;variants:Array<{id:string;productId:string;sku:string;size:string|null;color:string|null;stockQuantity:number;priceOverride:number|null}>};
