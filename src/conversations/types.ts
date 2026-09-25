@@ -1,4 +1,14 @@
 export type WhatsAppDirection="inbound"|"outbound";
-export interface ConversationRecord{id:string;customerId:string|null;channel:"whatsapp";externalId:string;lastMessageAt:Date|null;createdAt:Date;updatedAt:Date;}
+export type ConversationStatus="open"|"human"|"closed";
+export interface ConversationRecord{id:string;customerId:string|null;channel:"whatsapp";externalId:string;status:ConversationStatus;assignedAdminUserId:string|null;handoffReason:string|null;summary:string|null;summaryUpdatedAt:Date|null;lastMessageAt:Date|null;createdAt:Date;updatedAt:Date;}
 export interface ConversationMessageRecord{id:string;conversationId:string;externalId:string;direction:WhatsAppDirection;messageType:string;body:string|null;fromAddress:string|null;toAddress:string|null;createdAt:Date;}
-export interface ConversationRepository{getOrCreate(externalId:string,customerId?:string|null):Promise<ConversationRecord>;addMessage(input:{conversationId:string;externalId:string;direction:WhatsAppDirection;messageType?:string;body?:string|null;fromAddress?:string|null;toAddress?:string|null}):Promise<ConversationMessageRecord>;listMessages(conversationId:string,limit:number):Promise<ConversationMessageRecord[]>;}
+export interface ConversationContext{conversation:ConversationRecord;messages:ConversationMessageRecord[];}
+export interface ConversationRepository{
+ getOrCreate(externalId:string,customerId?:string|null):Promise<ConversationRecord>;
+ addMessage(input:{conversationId:string;externalId:string;direction:WhatsAppDirection;messageType?:string;body?:string|null;fromAddress?:string|null;toAddress?:string|null}):Promise<ConversationMessageRecord>;
+ listMessages(conversationId:string,limit:number):Promise<ConversationMessageRecord[]>;
+ list(status?:ConversationStatus):Promise<ConversationRecord[]>;
+ setStatus(id:string,status:ConversationStatus,assignedAdminUserId?:string|null,handoffReason?:string|null):Promise<ConversationRecord|null>;
+ setSummary(id:string,summary:string|null):Promise<ConversationRecord|null>;
+ getContext(id:string,limit:number):Promise<ConversationContext|null>;
+}
