@@ -10,6 +10,8 @@ const PERMISSION_DESCRIPTIONS: Record<(typeof ADMIN_PERMISSIONS)[number], string
   shipping: "Manage shipping",
   conversations: "Manage customer conversations",
   ai: "Use the AI commerce engine",
+  reports: "View commerce reports",
+  automation: "Run commerce automation",
   settings: "Manage platform settings",
   "users/permissions": "Manage admin users, roles, and permissions",
 };
