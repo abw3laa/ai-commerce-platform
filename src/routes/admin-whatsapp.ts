@@ -1,6 +1,16 @@
-import type {FastifyInstance} from "fastify";import type {AuthRepositories} from "../auth/types.js";import type {AuthorizationRepository} from "../auth/authorization-types.js";import {createAuthGuard} from "../auth/auth-guard.js";import {createPermissionGuard} from "../auth/authorization-guard.js";import type {ConversationRepository} from "../conversations/types.js";import type {WhatsAppConnector} from "../whatsapp/types.js";
+import type {FastifyInstance} from "fastify";
+import {qrcode} from "qrcode-generator";
+import type {AuthRepositories} from "../auth/types.js";
+import type {AuthorizationRepository} from "../auth/authorization-types.js";
+import {createAuthGuard} from "../auth/auth-guard.js";
+import {createPermissionGuard} from "../auth/authorization-guard.js";
+import type {ConversationRepository} from "../conversations/types.js";
+import type {WhatsAppConnector} from "../whatsapp/types.js";
 export interface AdminWhatsAppOptions{deps:AuthRepositories;authorizationRepo:AuthorizationRepository;conversationRepo:ConversationRepository;connector:WhatsAppConnector;isProduction:boolean;}
-export async function adminWhatsAppRoutes(app:FastifyInstance,o:AdminWhatsAppOptions){const auth=createAuthGuard({...o.deps,isProduction:o.isProduction}),guard=createPermissionGuard(o.authorizationRepo,"conversations");
-app.get("/whatsapp/status",{preHandler:[auth,guard]},async()=>o.connector.getConnection());
-app.post("/whatsapp/send",{preHandler:[auth,guard]},async(req,reply)=>{const b=req.body&&typeof req.body==="object"?req.body as Record<string,unknown>:{};if(typeof b.to!=="string"||!b.to.trim()||typeof b.body!=="string"||!b.body.trim())return reply.code(400).send({error:"invalid_message"});const to=b.to.trim();const result=await o.connector.sendText(to,b.body);const conversation=await o.conversationRepo.getOrCreate(to,null);await o.conversationRepo.addMessage({conversationId:conversation.id,externalId:result.externalId,direction:"outbound",body:b.body,toAddress:to});return reply.send(result);});
-app.get("/conversations/:id/messages",{preHandler:[auth,guard]},async(req)=>{const p=req.params as {id:string};return o.conversationRepo.listMessages(p.id,100);});}
+export async function adminWhatsAppRoutes(app:FastifyInstance,o:AdminWhatsAppOptions){
+ const auth=createAuthGuard({...o.deps,isProduction:o.isProduction}),guard=createPermissionGuard(o.authorizationRepo,"conversations");
+ app.get("/whatsapp/status",{preHandler:[auth,guard]},async()=>o.connector.getConnection());
+ app.get("/whatsapp/qr.svg",{preHandler:[auth,guard]},async(_req,reply)=>{const connection=o.connector.getConnection();if(!connection.qr)return reply.code(404).send({error:"qr_not_available"});const qr=qrcode(0,"M");qr.addData(connection.qr);qr.make();reply.type("image/svg+xml").header("cache-control","no-store");return reply.send(qr.createSvgTag({cellSize:6,margin:4,scalable:true,title:{text:"WhatsApp login QR"}} as never));});
+ app.post("/whatsapp/send",{preHandler:[auth,guard]},async(req,reply)=>{const b=req.body&&typeof req.body==="object"?req.body as Record<string,unknown>:{};if(typeof b.to!=="string"||!b.to.trim()||typeof b.body!=="string"||!b.body.trim())return reply.code(400).send({error:"invalid_message"});const to=b.to.trim();try{const result=await o.connector.sendText(to,b.body);const conversation=await o.conversationRepo.getOrCreate(to,null);await o.conversationRepo.addMessage({conversationId:conversation.id,externalId:result.externalId,direction:"outbound",body:b.body,toAddress:to});return reply.send(result);}catch(e){if(e instanceof Error&&e.message==="whatsapp_not_connected")return reply.code(503).send({error:e.message});throw e;}});
+ app.get("/conversations/:id/messages",{preHandler:[auth,guard]},async(req)=>{const p=req.params as {id:string};return o.conversationRepo.listMessages(p.id,100);});
+}
