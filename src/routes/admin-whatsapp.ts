@@ -1,5 +1,5 @@
 import type {FastifyInstance} from "fastify";
-import {qrcode} from "qrcode-generator";
+import qrcode from "qrcode-generator";
 import type {AuthRepositories} from "../auth/types.js";
 import type {AuthorizationRepository} from "../auth/authorization-types.js";
 import {createAuthGuard} from "../auth/auth-guard.js";
