@@ -2,7 +2,8 @@ import type {FastifyInstance} from "fastify";
 import type {AuthRepositories} from "../auth/types.js";import type {AuthorizationRepository} from "../auth/authorization-types.js";
 import {createAuthGuard} from "../auth/auth-guard.js";import {createPermissionGuard} from "../auth/authorization-guard.js";
 import type {ShipmentRepository,ShipmentStatus} from "../shipping/types.js";import {SHIPMENT_STATUSES} from "../shipping/types.js";
-export interface AdminShippingOptions{deps:AuthRepositories;authorizationRepo:AuthorizationRepository;shipmentRepo:ShipmentRepository;tracker?:import("../shipping/types.js").ShipmentTracker;isProduction:boolean;}
+import type {ShipmentTracker} from "../shipping/types.js";
+export interface AdminShippingOptions{deps:AuthRepositories;authorizationRepo:AuthorizationRepository;shipmentRepo:ShipmentRepository;tracker?:ShipmentTracker;isProduction:boolean;}
 function str(v:unknown){return typeof v==="string"&&v.trim()?v.trim():null;}
 export async function adminShippingRoutes(app:FastifyInstance,o:AdminShippingOptions){const auth=createAuthGuard({...o.deps,isProduction:o.isProduction}),guard=createPermissionGuard(o.authorizationRepo,"shipping");
 app.get("/orders/:orderId/shipping",{preHandler:[auth,guard]},async(req)=>o.shipmentRepo.getByOrderId((req.params as {orderId:string}).orderId));
