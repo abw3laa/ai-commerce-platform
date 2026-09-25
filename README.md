@@ -1,6 +1,6 @@
 # AI Commerce & Automation Platform — backend service
 
-Status: **Phase 1 / Task 10 — AI Commerce Engine.** Tasks 1–9 are complete:
+Status: **Phase 1 / Task 11 — Admin Application & Production Hardening.** Tasks 1–10 are complete:
 foundation, authentication/RBAC, catalog, customers/orders, payments, and
 shipping. This task adds a tool-driven AI commerce engine with strict catalog/order facts and an OpenAI-compatible provider.
 
@@ -178,8 +178,14 @@ The AI engine uses a provider abstraction and a bounded commerce tool registry. 
 
 The protected `POST /admin/ai/respond` endpoint requires the `ai` permission. The engine is limited to four tool rounds per request to prevent unbounded tool execution. Voice, social channels, workflow automation, and the final admin UI remain later scope.
 
-## Not built yet (upcoming tasks, in the agreed phase order)
+## Admin Application & Production Hardening
 
-Automation/reporting, completion of the admin application, and production hardening — each as its own small task with its own tests.
+Task 11 adds a complete lightweight admin application at `/admin/app` with a public `/admin/login` page. It uses the existing session cookie and RBAC permissions, with sections for dashboard, products, customers, orders, payments, shipping, WhatsApp, and AI. The UI is deliberately server-served HTML/CSS/JavaScript with no frontend framework or build pipeline, keeping the deployment footprint small.
+
+The application also adds baseline security response headers (`X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, and `Permissions-Policy`), strict no-store behavior for the admin UI, and a restrictive CSP that permits only the inline code required by this self-contained admin page. Production secrets and external AI credentials remain environment configuration rather than UI-managed values.
+
+## Not built yet (upcoming tasks)
+
+Automation, reporting/notifications, and final deployment/operational verification remain the next scope.
 
  
