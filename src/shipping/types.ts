@@ -1,0 +1,4 @@
+export const SHIPMENT_STATUSES=["pending","shipped","on_the_way","delivered"] as const;
+export type ShipmentStatus=(typeof SHIPMENT_STATUSES)[number];
+export interface ShipmentRecord{id:string;orderId:string;status:ShipmentStatus;carrier:string|null;trackingCode:string|null;trackingUrl:string|null;shippedAt:Date|null;deliveredAt:Date|null;createdAt:Date;updatedAt:Date;}
+export interface ShipmentRepository{getByOrderId(orderId:string):Promise<ShipmentRecord|null>;upsert(input:{orderId:string;carrier?:string|null;trackingCode?:string|null;trackingUrl?:string|null}):Promise<ShipmentRecord>;setStatus(id:string,status:ShipmentStatus):Promise<ShipmentRecord|null|{error:"invalid_transition"}>;}
