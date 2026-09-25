@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { PrismaClient } from "../../generated/prisma/client.js";
-import type { MediaOwner, MediaRecord, MediaRepository } from "./media-types.js";
+import type { MediaRecord, MediaRepository } from "./media-types.js";
 function map(row:any):MediaRecord{return {id:row.id,ownerType:row.ownerType,ownerId:row.ownerId,kind:row.kind,originalName:row.originalName,mimeType:row.mimeType,storageKey:row.storageKey,sizeBytes:row.sizeBytes,createdAt:row.createdAt};}
 export function createPrismaMediaRepository(prisma:PrismaClient):MediaRepository{return{
  async list(ownerType,ownerId){return (await prisma.mediaAsset.findMany({where:{ownerType,ownerId},orderBy:{createdAt:"desc"}})).map(map);},
