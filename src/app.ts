@@ -99,7 +99,7 @@ export async function buildApp(
     paymentRepo = createPrismaPaymentRepository(prisma);
     shipmentRepo = createPrismaShipmentRepository(prisma);
     conversationRepo = createPrismaConversationRepository(prisma);
-    app.addHook("onClose", async () => {
+    app.get("/health/ready", async (_request, reply) => {\n      try {\n        await prisma.$queryRaw`SELECT 1`;\n        return { status: "ready", database: "ok", timestamp: new Date().toISOString() };\n      } catch {\n        return reply.code(503).send({ status: "not_ready", database: "unavailable" });\n      }\n    });\n    app.addHook("onClose", async () => {
       await disconnect();
     });
   }
