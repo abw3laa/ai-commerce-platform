@@ -39,16 +39,10 @@ export function createWhatsAppAiInboundHandler(o: WhatsAppAiInboundHandlerOption
       customer?.id ?? null,
     );
 
-    await o.conversationRepo.addMessage({
-      conversationId: conversation.id,
-      externalId: message.externalId,
-      direction: "inbound",
-      body: message.body,
-      fromAddress: message.from,
-      toAddress: message.to,
-    });
-
-    if (conversation.status === "human") return;
+    if (conversation.status === "human") {
+      await o.conversationRepo.addMessage({conversationId:conversation.id,externalId:message.externalId,direction:"inbound",body:message.body,fromAddress:message.from,toAddress:message.to});
+      return;
+    }
 
     if (conversation.status === "closed") {
       await o.conversationRepo.setStatus(conversation.id, "open", null, null);
@@ -58,7 +52,8 @@ export function createWhatsAppAiInboundHandler(o: WhatsAppAiInboundHandlerOption
     if (!context) throw new Error("conversation_context_unavailable");
 
     const compact = buildPromptContext(context);
-    const aiHistory = compact.messages.length > 0 && compact.messages.at(-1)?.role === "user" && compact.messages.at(-1)?.content.trim() === message.body.trim() ? compact.messages.slice(0, -1) : compact.messages;
+    await o.conversationRepo.addMessage({conversationId:conversation.id,externalId:message.externalId,direction:"inbound",body:message.body,fromAddress:message.from,toAddress:message.to});
+    const aiHistory = compact.messages;
     const input = {
       message: message.body,
       conversationId: conversation.id,
