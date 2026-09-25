@@ -5,8 +5,8 @@ import type {AuthorizationRepository} from "../auth/authorization-types.js";
 
 export async function adminUiRoutes(app:FastifyInstance,o:{deps:AuthRepositories;isProduction:boolean}):Promise<void>{
  const auth=createAuthGuard({...o.deps,isProduction:o.isProduction});
- app.get("/login",async(_req,reply)=>reply.type("text/html; charset=utf-8").send(loginHtml()));
- app.get("/app",{preHandler:auth},async(_req,reply)=>reply.type("text/html; charset=utf-8").send(adminHtml()));
+ app.get("/login",async(_req,reply)=>reply.header("content-security-policy","default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'self'").header("cache-control","no-store").type("text/html; charset=utf-8").send(loginHtml()));
+ app.get("/app",{preHandler:auth},async(_req,reply)=>reply.header("content-security-policy","default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'self'").header("cache-control","no-store").type("text/html; charset=utf-8").send(adminHtml()));
  app.get("/ui-data",{preHandler:auth},async(req)=>{const admin=req.adminUser!;return {admin,permissions:await o.authorizationRepo.getPermissionKeysForAdmin(admin.id)};});
 }
 function shell(title:string,body:string,script:string){return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>
