@@ -122,7 +122,6 @@ model Product {
   orderItems OrderItem[]
   @@index([isActive])
   @@index([categoryId])
-  @@index([categoryId])
   @@map("products")
 }
 
