@@ -1,6 +1,6 @@
 # AI Commerce & Automation Platform — backend service
 
-Status: **Phase 1 / Task 11 — Admin Application & Production Hardening.** Tasks 1–10 are complete:
+Status: **Phase 1 / Task 12 — Final Automation, Reporting & Operational Verification.** Tasks 1–10 are complete:
 foundation, authentication/RBAC, catalog, customers/orders, payments, and
 shipping. This task adds a tool-driven AI commerce engine with strict catalog/order facts and an OpenAI-compatible provider.
 
@@ -184,8 +184,14 @@ Task 11 adds a complete lightweight admin application at `/admin/app` with a pub
 
 The application also adds baseline security response headers (`X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, and `Permissions-Policy`), strict no-store behavior for the admin UI, and a restrictive CSP that permits only the inline code required by this self-contained admin page. Production secrets and external AI credentials remain environment configuration rather than UI-managed values.
 
-## Not built yet (upcoming tasks)
+## Task 12 — Final Automation, Reporting & Operations
 
-Automation, reporting/notifications, and final deployment/operational verification remain the next scope.
+Task 12 completes the current Phase 1 scope. The admin application now includes a protected Reports section at `/admin/reports/summary`, covering catalog/customer/order totals, revenue, order/payment/shipping status breakdowns, and low-stock variants.
+
+Order status changes trigger deterministic WhatsApp customer notifications when WhatsApp is connected. Notification failures are logged without rolling back the already-persisted order status.
+
+`/health` is the liveness probe and `/health/ready` verifies PostgreSQL readiness. A production Dockerfile is included; it applies migrations and idempotently seeds RBAC before starting the server. No visual workflow editor was added; automation remains bounded to deterministic commerce actions.
+
+The current admin application is available at `/admin/login` and `/admin/app` after deployment.
 
  
