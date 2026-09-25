@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type {FastifyInstance} from "fastify";
 import type {AuthRepositories} from "../auth/types.js";
 import type {AuthorizationRepository} from "../auth/authorization-types.js";
@@ -10,7 +11,6 @@ const allowed=new Map([["image/jpeg","jpg"],["image/png","png"],["image/webp","w
 const max=10*1024*1024;
 export interface AdminCatalogOptions{deps:AuthRepositories;authorizationRepo:AuthorizationRepository;categoryRepo:CategoryRepository;mediaRepo:MediaRepository;mediaStore:MediaStore;isProduction:boolean;}
 function slug(v:unknown){return typeof v==="string"&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v)?v:null;}
-function owner(v:unknown):MediaOwner|null{return v==="product"||v==="offer"?v:null;}
 export async function adminCatalogRoutes(app:FastifyInstance,o:AdminCatalogOptions){
  const auth=createAuthGuard({...o.deps,isProduction:o.isProduction}),guard=createPermissionGuard(o.authorizationRepo,"products");
  app.get("/categories",{preHandler:[auth,guard]},async()=>o.categoryRepo.list());
