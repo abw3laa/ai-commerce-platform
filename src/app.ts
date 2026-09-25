@@ -17,6 +17,7 @@ import {adminWhatsAppRoutes} from "./routes/admin-whatsapp.js";
 import {adminAiRoutes} from "./routes/admin-ai.js";
 import {adminUiRoutes} from "./routes/admin-ui.js";
 import {adminReportsRoutes} from "./routes/admin-reports.js";
+import {createHttpShipmentTracker} from "./shipping/tracker.js";
 import {adminCatalogRoutes} from "./routes/admin-catalog.js";
 export async function buildApp(env:Env=loadEnv(),deps?:AuthRepositories):Promise<FastifyInstance>{
  const app=env.NODE_ENV==="development"?Fastify({logger:{level:env.LOG_LEVEL,transport:{target:"pino-pretty",options:{colorize:true}}}}):Fastify({logger:{level:env.LOG_LEVEL}});
@@ -48,7 +49,7 @@ export async function buildApp(env:Env=loadEnv(),deps?:AuthRepositories):Promise
   await app.register(adminWhatsAppRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,conversationRepo,connector:whatsapp,isProduction:env.NODE_ENV==="production"});
   await app.register(adminCustomersRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,customerRepo,isProduction:env.NODE_ENV==="production"});
   await app.register(adminPaymentsRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,paymentRepo,mediaRepo,mediaStore,receiptOcr:createTesseractReceiptOcr(),isProduction:env.NODE_ENV==="production"});
-  await app.register(adminShippingRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,shipmentRepo,isProduction:env.NODE_ENV==="production"});
+  await app.register(adminShippingRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,shipmentRepo,...(env.SHIPPING_TRACKING_BASE_URL&&env.SHIPPING_TRACKING_API_KEY?{tracker:createHttpShipmentTracker({baseUrl:env.SHIPPING_TRACKING_BASE_URL,apiKey:env.SHIPPING_TRACKING_API_KEY})}:{}),isProduction:env.NODE_ENV==="production"});
   await app.register(adminReportsRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,productRepo,customerRepo,orderRepo,paymentRepo,shipmentRepo,isProduction:env.NODE_ENV==="production"});
   const {createCommerceTools}=await import("./ai/tools.js");const {createCommerceEngine}=await import("./ai/engine.js");const {createOpenAiCompatibleProvider}=await import("./ai/openai-compatible-provider.js");
   const provider=env.AI_API_URL&&env.AI_API_KEY?createOpenAiCompatibleProvider({url:env.AI_API_URL,apiKey:env.AI_API_KEY,model:env.AI_MODEL}):{complete:async()=>{throw new Error("ai_provider_not_configured");}};
