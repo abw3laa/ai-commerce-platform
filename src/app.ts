@@ -10,6 +10,8 @@ import { adminProductsRoutes } from "./routes/admin-products.js";
 import { adminOffersRoutes } from "./routes/admin-offers.js";
 import { adminCustomersRoutes } from "./routes/admin-customers.js";
 import { adminOrdersRoutes } from "./routes/admin-orders.js";
+import { adminPaymentsRoutes } from "./routes/admin-payments.js";
+import { adminShippingRoutes } from "./routes/admin-shipping.js";
 
 /**
  * Builds (but does not start listening) a Fastify instance. Async because
@@ -44,6 +46,8 @@ export async function buildApp(
   let offerRepo: import("./catalog/offer-types.js").OfferRepository | undefined;
   let customerRepo: import("./customers/types.js").CustomerRepository | undefined;
   let orderRepo: import("./orders/types.js").OrderRepository | undefined;
+  let paymentRepo: import("./payments/types.js").PaymentRepository | undefined;
+  let shipmentRepo: import("./shipping/types.js").ShipmentRepository | undefined;
   if (deps) {
     resolvedDeps = deps;
   } else {
@@ -66,6 +70,8 @@ export async function buildApp(
         import("./catalog/prisma-offer-repository.js"),
         import("./customers/prisma-customer-repository.js"),
         import("./orders/prisma-order-repository.js"),
+        import("./payments/prisma-payment-repository.js"),
+        import("./shipping/prisma-shipment-repository.js"),
       ]);
 
     const { prisma, disconnect } = createPrismaClient(env.DATABASE_URL);
@@ -78,6 +84,8 @@ export async function buildApp(
     offerRepo = createPrismaOfferRepository(prisma);
     customerRepo = createPrismaCustomerRepository(prisma);
     orderRepo = createPrismaOrderRepository(prisma);
+    paymentRepo = createPrismaPaymentRepository(prisma);
+    shipmentRepo = createPrismaShipmentRepository(prisma);
     app.addHook("onClose", async () => {
       await disconnect();
     });
@@ -128,6 +136,10 @@ export async function buildApp(
     await app.register(adminCustomersRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,customerRepo,isProduction:env.NODE_ENV==="production"});
     if (!orderRepo) throw new Error("Order repository was not initialized");
     await app.register(adminOrdersRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,orderRepo,isProduction:env.NODE_ENV==="production"});
+    if (!paymentRepo) throw new Error("Payment repository was not initialized");
+    await app.register(adminPaymentsRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,paymentRepo,isProduction:env.NODE_ENV==="production"});
+    if (!shipmentRepo) throw new Error("Shipment repository was not initialized");
+    await app.register(adminShippingRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,shipmentRepo,isProduction:env.NODE_ENV==="production"});
   }
 
   return app;
