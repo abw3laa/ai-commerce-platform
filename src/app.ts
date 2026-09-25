@@ -42,7 +42,13 @@ export async function buildApp(
       : Fastify({ logger: { level: env.LOG_LEVEL } });
 
   app.register(healthRoutes);
-  app.addHook("onSend", async (_request, reply) => {\n    reply.header("x-content-type-options", "nosniff");\n    reply.header("referrer-policy", "no-referrer");\n    reply.header("x-frame-options", "DENY");\n    reply.header("permissions-policy", "camera=(), microphone=(), geolocation=()");\n  });\n
+  app.addHook("onSend", async (_request, reply) => {
+    reply.header("x-content-type-options", "nosniff");
+    reply.header("referrer-policy", "no-referrer");
+    reply.header("x-frame-options", "DENY");
+    reply.header("permissions-policy", "camera=(), microphone=(), geolocation=()");
+  });
+
   let resolvedDeps: AuthRepositories;
   let authorizationRepo: AuthorizationRepository | undefined;
   let productRepo: import("./catalog/types.js").ProductRepository | undefined;
@@ -181,7 +187,8 @@ export async function buildApp(
       ? createOpenAiCompatibleProvider({url:env.AI_API_URL,apiKey:env.AI_API_KEY,model:env.AI_MODEL})
       : { complete: async () => { throw new Error("ai_provider_not_configured"); } };
     const engine = createCommerceEngine(provider, createCommerceTools({products:productRepo,orders:orderRepo,payments:paymentRepo,shipping:shipmentRepo}));
-    await app.register(adminAiRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,engine,isProduction:env.NODE_ENV==="production"});\n    await app.register(adminUiRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,isProduction:env.NODE_ENV==="production"});
+    await app.register(adminAiRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,engine,isProduction:env.NODE_ENV==="production"});
+    await app.register(adminUiRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,isProduction:env.NODE_ENV==="production"});
   }
 
   return app;
