@@ -58,11 +58,12 @@ export function createWhatsAppAiInboundHandler(o: WhatsAppAiInboundHandlerOption
     if (!context) throw new Error("conversation_context_unavailable");
 
     const compact = buildPromptContext(context);
+    const aiHistory = compact.messages.length > 0 && compact.messages.at(-1)?.role === "user" && compact.messages.at(-1)?.content.trim() === message.body.trim() ? compact.messages.slice(0, -1) : compact.messages;
     const input = {
       message: message.body,
       conversationId: conversation.id,
       summary: compact.summary,
-      history: compact.messages.length > 0 ? compact.messages.slice(0, -1) : compact.messages,
+      history: aiHistory,
       allowOrderCreation: isExplicitOrderConfirmation(message.body),
       ...(customer?.id ? { customerId: customer.id } : {}),
     };
