@@ -1,5 +1,6 @@
 FROM node:22-alpine AS build
 WORKDIR /app
+ENV DATABASE_URL=postgresql://ci:ci@localhost:5432/ai_commerce_ci
 COPY package*.json ./
 RUN npm ci
 COPY prisma ./prisma
