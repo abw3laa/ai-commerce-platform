@@ -52,14 +52,15 @@ export function createWhatsAppAiInboundHandler(o: WhatsAppAiInboundHandlerOption
     if (!context) throw new Error("conversation_context_unavailable");
 
     const compact = buildPromptContext(context);
-    const result = await o.engine.respond({
+    const input = {
       message: message.body,
-      customerId: customer?.id,
       conversationId: conversation.id,
       summary: compact.summary,
       history: compact.messages,
       allowOrderCreation: false,
-    });
+      ...(customer?.id ? { customerId: customer.id } : {}),
+    };
+    const result = await o.engine.respond(input);
 
     const sent = await o.connector.sendText(message.from, result.reply);
     await o.conversationRepo.addMessage({
