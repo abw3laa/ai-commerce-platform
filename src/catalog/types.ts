@@ -1,7 +1,7 @@
 export interface ProductRecord {
   id: string; name: string; description: string | null; productCode: string;
   price: number; cost: number | null; currency: string; isActive: boolean;
-  categoryId: string|null; createdAt: Date; updatedAt: Date;
+  categoryId?: string|null; createdAt: Date; updatedAt: Date;
 }
 export interface ProductVariantRecord {
   id: string; productId: string; sku: string; size: string | null; color: string | null;
