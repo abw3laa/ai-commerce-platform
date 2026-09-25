@@ -1,9 +1,9 @@
 # AI Commerce & Automation Platform — backend service
 
-Status: **Phase 1 / Task 7 — customers & orders.** Tasks 1–6 are complete:
-foundation, database/admin user, authentication, RBAC, dashboard, and
-products/inventory/offers. This task adds the protected customer and core
-order management API. Payments, shipping, WhatsApp, and AI remain separate later tasks.
+Status: **Phase 1 / Task 8 — payments & shipping.** Tasks 1–7 are complete:
+foundation, database/admin user, authentication, RBAC, dashboard,
+products/inventory/offers, and customers/orders. This task adds protected
+payment verification and shipment tracking APIs.
 
 ## Stack decisions made so far (see project chat log for full reasoning)
 
@@ -89,8 +89,12 @@ outside the workflow — no local database, no external service.
   product/variant snapshots (name, SKU, size, color, unit price, quantity)
   so later catalog edits do not rewrite historical order details. Core order
   status flow is `received → review → preparing → shipped → on_the_way`,
-  with cancellation allowed before shipping. Payment and shipping metadata
-  are intentionally deferred to their later tasks.
+  with cancellation allowed before shipping.
+- **Task 8 models** — `Payment` and `Shipment`, each one-to-one with an order.
+  Payment supports `prepaid`, `bank_transfer`, and `pay_later`, with pending,
+  approved, and rejected verification states. Shipment tracks carrier,
+  tracking code/URL, and the lifecycle `pending → shipped → on_the_way → delivered`.
+  Receipt OCR and external carrier integrations remain deferred.
 
 Prisma ORM 7 moved the CLI's database connection, schema path, and
 migrations folder out of `schema.prisma` and into `prisma.config.ts`.
@@ -149,10 +153,18 @@ current inherited permissions, platform status, and a logout action. The
 page sends `Cache-Control: no-store` and a restrictive Content Security
 Policy. It intentionally contains no product/order/WhatsApp/AI features.
 
+## Payments and shipping
+
+Protected `/admin` routes manage payment records and verification status under
+`payments`, and shipment carrier/tracking data and status under `shipping`.
+Payment approval records `verifiedAt`; rejection requires a reason when one is
+provided. Shipment timestamps are recorded when shipping and delivery states
+are reached. Receipt OCR and carrier-specific integrations are intentionally
+out of scope for this task.
+
 ## Not built yet (upcoming tasks, in the agreed phase order)
 
-Payments/shipping, the WhatsApp connector (Baileys), the AI core,
-automation/reporting, and later production hardening — each as its own small
-task with its own tests.
+The WhatsApp connector (Baileys), AI core, automation/reporting, and later
+production hardening — each as its own small task with its own tests.
 
  
