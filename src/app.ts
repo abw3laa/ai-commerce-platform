@@ -152,13 +152,22 @@ export async function buildApp(
     const customerRepository = customerRepo;
     const conversationRepository = conversationRepo;
     await whatsapp.onText(async (message) => {
-      const phone = message.from.split("@")[0];
+      const from = message.from;
+      const to = message.to;
+      const externalId = message.externalId;
+      const body = message.body;
+      const phone = from.split("@")[0] ?? from;
       let customer = await customerRepository.getByPhone(phone);
       if (!customer) {
-        try { customer = await customerRepository.create({name:phone,phone}); } catch { customer = await customerRepository.getByPhone(phone); }
+        try {
+          customer = await customerRepository.create({name:phone,phone});
+        } catch {
+          customer = await customerRepository.getByPhone(phone);
+        }
       }
-      const conversation = await conversationRepository.getOrCreate(message.from, customer?.id ?? null);
-      await conversationRepository.addMessage({conversationId:conversation.id,externalId:message.externalId,direction:"inbound",body:message.body,fromAddress:message.from,toAddress:message.to});
+      const customerId = customer ? customer.id : null;
+      const conversation = await conversationRepository.getOrCreate(from, customerId);
+      await conversationRepository.addMessage({conversationId:conversation.id,externalId,direction:"inbound",body,fromAddress:from,toAddress:to});
     });
     await whatsapp.connect();
   }
