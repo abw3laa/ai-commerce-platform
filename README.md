@@ -1,9 +1,8 @@
 # AI Commerce & Automation Platform — backend service
 
-Status: **Phase 1 / Task 8 — payments & shipping.** Tasks 1–7 are complete:
-foundation, database/admin user, authentication, RBAC, dashboard,
-products/inventory/offers, and customers/orders. This task adds protected
-payment verification and shipment tracking APIs.
+Status: **Phase 1 / Task 9 — WhatsApp Commerce.** Tasks 1–8 are complete:
+foundation, authentication/RBAC, catalog, customers/orders, payments, and
+shipping. This task adds the Baileys WhatsApp connector and conversation persistence.
 
 ## Stack decisions made so far (see project chat log for full reasoning)
 
@@ -91,6 +90,7 @@ outside the workflow — no local database, no external service.
   status flow is `received → review → preparing → shipped → on_the_way`,
   with cancellation allowed before shipping.
 - **Task 8 models** — `Payment` and `Shipment`, each one-to-one with an order.
+- **Task 9 models** — `Conversation` and `ConversationMessage` for WhatsApp conversation history and customer linkage.
   Payment supports `prepaid`, `bank_transfer`, and `pay_later`, with pending,
   approved, and rejected verification states. Shipment tracks carrier,
   tracking code/URL, and the lifecycle `pending → shipped → on_the_way → delivered`.
@@ -162,9 +162,19 @@ provided. Shipment timestamps are recorded when shipping and delivery states
 are reached. Receipt OCR and carrier-specific integrations are intentionally
 out of scope for this task.
 
+## WhatsApp Commerce
+
+The WhatsApp connector uses Baileys over its WebSocket connection, with
+persistent multi-device credentials under `WHATSAPP_AUTH_DIR`. Incoming text
+messages are linked to a customer by phone and persisted as conversation
+messages; outbound admin messages are persisted as well. Protected admin
+endpoints expose connection status, sending text messages, and conversation
+history under the `conversations` permission. QR/pairing-code presentation and
+the AI reply engine are separate concerns handled by the later admin/AI work.
+
 ## Not built yet (upcoming tasks, in the agreed phase order)
 
-The WhatsApp connector (Baileys), AI core, automation/reporting, and later
+The AI core, automation/reporting, admin application completion, and later
 production hardening — each as its own small task with its own tests.
 
  
