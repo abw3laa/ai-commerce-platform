@@ -83,3 +83,9 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Validate production scripts
+        run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh scripts/verify-production.sh
+
+      - name: Build production Docker image
+        run: docker build --pull -t ai-commerce-platform:ci .
