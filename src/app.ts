@@ -15,6 +15,7 @@ import { adminShippingRoutes } from "./routes/admin-shipping.js";
 import { adminWhatsAppRoutes } from "./routes/admin-whatsapp.js";
 import { adminAiRoutes } from "./routes/admin-ai.js";
 import { adminUiRoutes } from "./routes/admin-ui.js";
+import { adminReportsRoutes } from "./routes/admin-reports.js";
 
 /**
  * Builds (but does not start listening) a Fastify instance. Async because
@@ -147,11 +148,11 @@ export async function buildApp(
     if (!customerRepo) throw new Error("Customer repository was not initialized");
     await app.register(adminCustomersRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,customerRepo,isProduction:env.NODE_ENV==="production"});
     if (!orderRepo) throw new Error("Order repository was not initialized");
-    await app.register(adminOrdersRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,orderRepo,isProduction:env.NODE_ENV==="production"});
     if (!paymentRepo) throw new Error("Payment repository was not initialized");
     await app.register(adminPaymentsRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,paymentRepo,isProduction:env.NODE_ENV==="production"});
     if (!shipmentRepo) throw new Error("Shipment repository was not initialized");
     await app.register(adminShippingRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,shipmentRepo,isProduction:env.NODE_ENV==="production"});
+    await app.register(adminReportsRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,productRepo,customerRepo,orderRepo,paymentRepo,shipmentRepo,isProduction:env.NODE_ENV==="production"});
     if (!conversationRepo) throw new Error("Conversation repository was not initialized");
     const { createBaileysConnector } = await import("./whatsapp/baileys-connector.js");
     const whatsapp = createBaileysConnector({authDirectory:env.WHATSAPP_AUTH_DIR});
@@ -178,6 +179,7 @@ export async function buildApp(
       await conversationRepository.addMessage({conversationId:conversation.id,externalId,direction:"inbound",body,fromAddress:from,toAddress:to});
     });
     await whatsapp.connect();
+    await app.register(adminOrdersRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,orderRepo,customerRepo,whatsapp,isProduction:env.NODE_ENV==="production"});
 
     if (!productRepo || !orderRepo || !paymentRepo || !shipmentRepo || !authorizationRepo) throw new Error("AI dependencies were not initialized");
     const { createCommerceTools } = await import("./ai/tools.js");
