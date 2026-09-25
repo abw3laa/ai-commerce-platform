@@ -9,6 +9,7 @@ const PERMISSION_DESCRIPTIONS: Record<(typeof ADMIN_PERMISSIONS)[number], string
   payments: "Manage payments",
   shipping: "Manage shipping",
   conversations: "Manage customer conversations",
+  ai: "Use the AI commerce engine",
   settings: "Manage platform settings",
   "users/permissions": "Manage admin users, roles, and permissions",
 };
