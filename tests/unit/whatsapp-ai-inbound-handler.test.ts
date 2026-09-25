@@ -32,6 +32,7 @@ describe("WhatsApp AI inbound handler", () => {
       ]})),
     };
     const connector = {
+      requestPairingCode: vi.fn(async () => "ABCD-1234"),
       connect: vi.fn(), getConnection: vi.fn(), sendText: vi.fn(async()=>({externalId:"out-1"})),
       onText: vi.fn(), close: vi.fn(),
     };
@@ -62,7 +63,7 @@ describe("WhatsApp AI inbound handler", () => {
       setSummary: vi.fn(), getContext: vi.fn(),
     };
     const customerRepo = {list:vi.fn(async()=>[]),getByPhone:vi.fn(async()=>null),create:vi.fn(),update:vi.fn()};
-    const connector = {connect:vi.fn(),getConnection:vi.fn(),sendText:vi.fn(),onText:vi.fn(),close:vi.fn()};
+    const connector = {requestPairingCode:vi.fn(async()=> "ABCD-1234"),connect:vi.fn(),getConnection:vi.fn(),sendText:vi.fn(),onText:vi.fn(),close:vi.fn()};
     const engine = {respond:vi.fn()};
     const handler=createWhatsAppAiInboundHandler({customerRepo,conversationRepo,connector,engine});
     await handler({externalId:"in-2",from:"90555@s.whatsapp.net",to:"store@s.whatsapp.net",body:"أريد موظف"});
@@ -80,7 +81,7 @@ describe("WhatsApp AI inbound handler", () => {
       getContext: vi.fn(async()=>({conversation:conversation("open"),messages:[]})),
     };
     const customerRepo = {list:vi.fn(async()=>[]),getByPhone:vi.fn(async()=>null),create:vi.fn(),update:vi.fn()};
-    const connector = {connect:vi.fn(),getConnection:vi.fn(),sendText:vi.fn(async()=>({externalId:"out-2"})),onText:vi.fn(),close:vi.fn()};
+    const connector = {requestPairingCode:vi.fn(async()=> "ABCD-1234"),connect:vi.fn(),getConnection:vi.fn(),sendText:vi.fn(async()=>({externalId:"out-2"})),onText:vi.fn(),close:vi.fn()};
     const engine = {respond:vi.fn(async()=>({reply:"تم",toolCalls:[]}))};
     const handler=createWhatsAppAiInboundHandler({customerRepo,conversationRepo,connector,engine});
     await handler({externalId:"in-3",from:"90555@s.whatsapp.net",to:"store@s.whatsapp.net",body:"مرحبا"});
