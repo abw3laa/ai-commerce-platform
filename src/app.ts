@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Fastify,{type FastifyInstance} from "fastify";
 import fastifyRateLimit from "@fastify/rate-limit";
 import {loadEnv,type Env} from "./config/env.js";
