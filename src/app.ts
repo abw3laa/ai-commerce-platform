@@ -187,7 +187,7 @@ export async function buildApp(
       await conversationRepository.addMessage({conversationId:conversation.id,externalId,direction:"inbound",body,fromAddress:from,toAddress:to});
     });
     await whatsapp.connect();
-    await app.register(adminOrdersRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,orderRepo,customerRepo,whatsapp,isProduction:env.NODE_ENV==="production"});
+    await app.register(adminOrdersRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,orderRepo,customerRepo:customerRepository,whatsapp,isProduction:env.NODE_ENV==="production"});
 
     if (!productRepo || !orderRepo || !paymentRepo || !shipmentRepo || !authorizationRepo) throw new Error("AI dependencies were not initialized");
     const { createCommerceTools } = await import("./ai/tools.js");
