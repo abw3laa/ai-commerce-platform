@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {createReadStream,createWriteStream} from "node:fs";
 import {mkdir,unlink,stat} from "node:fs/promises";
 import {join,resolve,basename} from "node:path";
