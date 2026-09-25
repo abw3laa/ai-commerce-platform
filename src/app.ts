@@ -60,7 +60,7 @@ export async function buildApp(
     // does not exist locally (only in CI, where it is actually
     // generated). A static top-level import here would break every test
     // that imports buildApp, even ones that never use real Prisma.
-    const [{ createPrismaClient }, { createPrismaAdminUserRepository }, { createPrismaAdminSessionRepository }, { createPrismaAuthorizationRepository }, { createPrismaProductRepository }, { createPrismaOfferRepository }, { createPrismaCustomerRepository }, { createPrismaOrderRepository }] =
+    const [{ createPrismaClient }, { createPrismaAdminUserRepository }, { createPrismaAdminSessionRepository }, { createPrismaAuthorizationRepository }, { createPrismaProductRepository }, { createPrismaOfferRepository }, { createPrismaCustomerRepository }, { createPrismaOrderRepository }, { createPrismaPaymentRepository }, { createPrismaShipmentRepository }] =
       await Promise.all([
         import("./db/client.js"),
         import("./auth/prisma-admin-user-repository.js"),
