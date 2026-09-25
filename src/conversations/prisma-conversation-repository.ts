@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type {PrismaClient} from "../../generated/prisma/client.js";
-import type {ConversationRepository,ConversationRecord,ConversationMessageRecord,ConversationStatus,ConversationContext} from "./types.js";
+import type {ConversationRepository,ConversationRecord,ConversationMessageRecord} from "./types.js";
 const map=(x:any):ConversationRecord=>({id:x.id,customerId:x.customerId,channel:"whatsapp",externalId:x.externalId,status:x.status,assignedAdminUserId:x.assignedAdminUserId,handoffReason:x.handoffReason,summary:x.summary,summaryUpdatedAt:x.summaryUpdatedAt,lastMessageAt:x.lastMessageAt,createdAt:x.createdAt,updatedAt:x.updatedAt});
 const mapMessage=(x:any):ConversationMessageRecord=>({id:x.id,conversationId:x.conversationId,externalId:x.externalId,direction:x.direction,messageType:x.messageType,body:x.body,fromAddress:x.fromAddress,toAddress:x.toAddress,createdAt:x.createdAt});
 export function createPrismaConversationRepository(prisma:PrismaClient):ConversationRepository{return{
