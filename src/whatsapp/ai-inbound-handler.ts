@@ -62,7 +62,7 @@ export function createWhatsAppAiInboundHandler(o: WhatsAppAiInboundHandlerOption
       message: message.body,
       conversationId: conversation.id,
       summary: compact.summary,
-      history: compact.messages,
+      history: compact.messages.length > 0 ? compact.messages.slice(0, -1) : compact.messages,
       allowOrderCreation: isExplicitOrderConfirmation(message.body),
       ...(customer?.id ? { customerId: customer.id } : {}),
     };
