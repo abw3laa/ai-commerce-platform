@@ -148,6 +148,16 @@ export async function buildApp(
     const { createBaileysConnector } = await import("./whatsapp/baileys-connector.js");
     const whatsapp = createBaileysConnector({authDirectory:"./data/whatsapp-auth"});
     await app.register(adminWhatsAppRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,conversationRepo,connector:whatsapp,isProduction:env.NODE_ENV==="production"});
+    if (!customerRepo) throw new Error("Customer repository was not initialized");
+    await whatsapp.onText(async (message) => {
+      const phone = message.from.split("@")[0];
+      let customer = await customerRepo.getByPhone(phone);
+      if (!customer) {
+        try { customer = await customerRepo.create({name:phone,phone}); } catch { customer = await customerRepo.getByPhone(phone); }
+      }
+      const conversation = await conversationRepo.getOrCreate(message.from, customer?.id ?? null);
+      await conversationRepo.addMessage({conversationId:conversation.id,externalId:message.externalId,direction:"inbound",body:message.body,fromAddress:message.from,toAddress:message.to});
+    });
   }
 
   return app;
