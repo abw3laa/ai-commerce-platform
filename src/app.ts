@@ -14,6 +14,7 @@ import { adminPaymentsRoutes } from "./routes/admin-payments.js";
 import { adminShippingRoutes } from "./routes/admin-shipping.js";
 import { adminWhatsAppRoutes } from "./routes/admin-whatsapp.js";
 import { adminAiRoutes } from "./routes/admin-ai.js";
+import { adminUiRoutes } from "./routes/admin-ui.js";
 
 /**
  * Builds (but does not start listening) a Fastify instance. Async because
@@ -41,7 +42,7 @@ export async function buildApp(
       : Fastify({ logger: { level: env.LOG_LEVEL } });
 
   app.register(healthRoutes);
-
+  app.addHook("onSend", async (_request, reply) => {\n    reply.header("x-content-type-options", "nosniff");\n    reply.header("referrer-policy", "no-referrer");\n    reply.header("x-frame-options", "DENY");\n    reply.header("permissions-policy", "camera=(), microphone=(), geolocation=()");\n  });\n
   let resolvedDeps: AuthRepositories;
   let authorizationRepo: AuthorizationRepository | undefined;
   let productRepo: import("./catalog/types.js").ProductRepository | undefined;
@@ -180,7 +181,7 @@ export async function buildApp(
       ? createOpenAiCompatibleProvider({url:env.AI_API_URL,apiKey:env.AI_API_KEY,model:env.AI_MODEL})
       : { complete: async () => { throw new Error("ai_provider_not_configured"); } };
     const engine = createCommerceEngine(provider, createCommerceTools({products:productRepo,orders:orderRepo,payments:paymentRepo,shipping:shipmentRepo}));
-    await app.register(adminAiRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,engine,isProduction:env.NODE_ENV==="production"});
+    await app.register(adminAiRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,engine,isProduction:env.NODE_ENV==="production"});\n    await app.register(adminUiRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,isProduction:env.NODE_ENV==="production"});
   }
 
   return app;
