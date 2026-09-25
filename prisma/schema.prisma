@@ -148,6 +148,7 @@ model Customer {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   orders Order[]
+  conversations Conversation[]
   @@index([name])
   @@map("customers")
 }
@@ -161,7 +162,6 @@ model Order {
   items OrderItem[]
   payment Payment?
   shipment Shipment?
-  conversations Conversation[]
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   @@index([customerId])
