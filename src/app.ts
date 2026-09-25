@@ -49,7 +49,8 @@ export async function buildApp(env:Env=loadEnv(),deps?:AuthRepositories):Promise
   await app.register(adminPaymentsRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,paymentRepo,isProduction:env.NODE_ENV==="production"});
   await app.register(adminShippingRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,shipmentRepo,isProduction:env.NODE_ENV==="production"});
   await app.register(adminReportsRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,productRepo,customerRepo,orderRepo,paymentRepo,shipmentRepo,isProduction:env.NODE_ENV==="production"});
-  await whatsapp.onText(async(message)=>{const phone=message.from.split("@")[0]??message.from;let customer=await customerRepo.getByPhone(phone);if(!customer){try{customer=await customerRepo.create({name:phone,phone});}catch{customer=await customerRepo.getByPhone(phone);}}const conversation=await conversationRepo.getOrCreate(message.from,customer?.id??null);await conversationRepo.addMessage({conversationId:conversation.id,externalId:message.externalId,direction:"inbound",body:message.body,fromAddress:message.from,toAddress:message.to});});
+  const {createWhatsAppAiInboundHandler}=await import("./whatsapp/ai-inbound-handler.js");
+  await whatsapp.onText(createWhatsAppAiInboundHandler({customerRepo,conversationRepo,connector:whatsapp,engine}));
   await whatsapp.connect();
   await app.register(adminOrdersRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,orderRepo,customerRepo,whatsapp,isProduction:env.NODE_ENV==="production"});
   const {createCommerceTools}=await import("./ai/tools.js");const {createCommerceEngine}=await import("./ai/engine.js");const {createOpenAiCompatibleProvider}=await import("./ai/openai-compatible-provider.js");
