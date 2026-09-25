@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { PrismaClient } from "../../generated/prisma/client.js";
 import type { CategoryRepository, CategoryRecord } from "./category-types.js";
 function map(row:any):CategoryRecord{return {id:row.id,name:row.name,slug:row.slug,isActive:row.isActive,createdAt:row.createdAt,updatedAt:row.updatedAt};}
