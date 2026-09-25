@@ -1,9 +1,9 @@
 # AI Commerce & Automation Platform — backend service
 
-Status: **Phase 1 / Task 5 — basic admin dashboard.** Tasks 1–4 (foundation,
-admin authentication, and RBAC) are complete. This task adds the first
-protected server-rendered admin dashboard. Products, orders, WhatsApp,
-and the AI core remain separate later tasks.
+Status: **Phase 1 / Task 7 — customers & orders.** Tasks 1–6 are complete:
+foundation, database/admin user, authentication, RBAC, dashboard, and
+products/inventory/offers. This task adds the protected customer and core
+order management API. Payments, shipping, WhatsApp, and AI remain separate later tasks.
 
 ## Stack decisions made so far (see project chat log for full reasoning)
 
@@ -80,15 +80,17 @@ outside the workflow — no local database, no external service.
 
 ## Prisma
 
-`prisma/schema.prisma` currently defines two models:
+`prisma/schema.prisma` defines the admin/auth, RBAC, catalog, customer, and order models:
 
-- **`AdminUser`** (`admin_users`, Task 2) — `id` (cuid), unique `email`,
-  `passwordHash` (Argon2id, never plaintext), `isActive`, timestamps. No
-  `role`/`permissions` field yet — deferred until RBAC is actually needed.
-- **`AdminSession`** (`admin_sessions`, Task 3) — belongs to an
-  `AdminUser` (cascades on delete), a unique `tokenHash` (SHA-256 of the
-  raw session token — the raw value is never stored), `expiresAt`, and a
-  nullable `revokedAt` set on logout.
+- **`AdminUser` / `AdminSession`** — session-based admin authentication.
+- **RBAC models** — `Role`, `Permission`, `AdminUserRole`, `RolePermission`.
+- **Catalog models** — `Product`, `ProductVariant`, `Offer`, `OfferItem`.
+- **Task 7 models** — `Customer`, `Order`, and `OrderItem`. Order items keep
+  product/variant snapshots (name, SKU, size, color, unit price, quantity)
+  so later catalog edits do not rewrite historical order details. Core order
+  status flow is `received → review → preparing → shipped → on_the_way`,
+  with cancellation allowed before shipping. Payment and shipping metadata
+  are intentionally deferred to their later tasks.
 
 Prisma ORM 7 moved the CLI's database connection, schema path, and
 migrations folder out of `schema.prisma` and into `prisma.config.ts`.
@@ -149,8 +151,8 @@ Policy. It intentionally contains no product/order/WhatsApp/AI features.
 
 ## Not built yet (upcoming tasks, in the agreed phase order)
 
-Products/inventory/offers, then customers/orders, payments/shipping, the
-WhatsApp connector (Baileys), the AI core, automation/reporting, and later
-production hardening — each as its own small task with its own tests.
+Payments/shipping, the WhatsApp connector (Baileys), the AI core,
+automation/reporting, and later production hardening — each as its own small
+task with its own tests.
 
  

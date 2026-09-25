@@ -8,6 +8,8 @@ import type { AuthorizationRepository } from "./auth/authorization-types.js";
 import { adminDashboardRoutes } from "./routes/admin-dashboard.js";
 import { adminProductsRoutes } from "./routes/admin-products.js";
 import { adminOffersRoutes } from "./routes/admin-offers.js";
+import { adminCustomersRoutes } from "./routes/admin-customers.js";
+import { adminOrdersRoutes } from "./routes/admin-orders.js";
 
 /**
  * Builds (but does not start listening) a Fastify instance. Async because
@@ -40,6 +42,8 @@ export async function buildApp(
   let authorizationRepo: AuthorizationRepository | undefined;
   let productRepo: import("./catalog/types.js").ProductRepository | undefined;
   let offerRepo: import("./catalog/offer-types.js").OfferRepository | undefined;
+  let customerRepo: import("./customers/types.js").CustomerRepository | undefined;
+  let orderRepo: import("./orders/types.js").OrderRepository | undefined;
   if (deps) {
     resolvedDeps = deps;
   } else {
@@ -52,7 +56,7 @@ export async function buildApp(
     // does not exist locally (only in CI, where it is actually
     // generated). A static top-level import here would break every test
     // that imports buildApp, even ones that never use real Prisma.
-    const [{ createPrismaClient }, { createPrismaAdminUserRepository }, { createPrismaAdminSessionRepository }, { createPrismaAuthorizationRepository }, { createPrismaProductRepository }, { createPrismaOfferRepository }] =
+    const [{ createPrismaClient }, { createPrismaAdminUserRepository }, { createPrismaAdminSessionRepository }, { createPrismaAuthorizationRepository }, { createPrismaProductRepository }, { createPrismaOfferRepository }, { createPrismaCustomerRepository }, { createPrismaOrderRepository }] =
       await Promise.all([
         import("./db/client.js"),
         import("./auth/prisma-admin-user-repository.js"),
@@ -60,6 +64,8 @@ export async function buildApp(
         import("./auth/prisma-authorization-repository.js"),
         import("./catalog/prisma-product-repository.js"),
         import("./catalog/prisma-offer-repository.js"),
+        import("./customers/prisma-customer-repository.js"),
+        import("./orders/prisma-order-repository.js"),
       ]);
 
     const { prisma, disconnect } = createPrismaClient(env.DATABASE_URL);
@@ -70,6 +76,8 @@ export async function buildApp(
     authorizationRepo = createPrismaAuthorizationRepository(prisma);
     productRepo = createPrismaProductRepository(prisma);
     offerRepo = createPrismaOfferRepository(prisma);
+    customerRepo = createPrismaCustomerRepository(prisma);
+    orderRepo = createPrismaOrderRepository(prisma);
     app.addHook("onClose", async () => {
       await disconnect();
     });
@@ -116,6 +124,10 @@ export async function buildApp(
       offerRepo,
       isProduction: env.NODE_ENV === "production",
     });
+    if (!customerRepo) throw new Error("Customer repository was not initialized");
+    await app.register(adminCustomersRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,customerRepo,isProduction:env.NODE_ENV==="production"});
+    if (!orderRepo) throw new Error("Order repository was not initialized");
+    await app.register(adminOrdersRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,orderRepo,isProduction:env.NODE_ENV==="production"});
   }
 
   return app;

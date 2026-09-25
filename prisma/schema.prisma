@@ -1,5 +1,4 @@
 // This is the Prisma schema file for the AI Commerce & Automation Platform.
-// Learn more about it in the Prisma docs.
 
 generator client {
   provider     = "prisma-client"
@@ -13,7 +12,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// Task 2 — admin accounts.
 model AdminUser {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -21,142 +19,169 @@ model AdminUser {
   isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
-
   sessions AdminSession[]
-  roles    AdminUserRole[]
-
+  roles AdminUserRole[]
   @@map("admin_users")
 }
 
-// Task 3 — session-based authentication.
 model AdminSession {
-  id          String    @id @default(cuid())
-  adminUserId String    @map("admin_user_id")
-  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
-  tokenHash   String    @unique @map("token_hash")
-  expiresAt   DateTime  @map("expires_at")
-  revokedAt   DateTime? @map("revoked_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
-
+  id String @id @default(cuid())
+  adminUserId String @map("admin_user_id")
+  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  tokenHash String @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime @default(now()) @map("created_at")
   @@index([adminUserId])
   @@map("admin_sessions")
 }
 
-// Task 4 — named roles that group permissions. Many-to-many keeps the
-// model extensible without coupling an admin to exactly one role.
 model Role {
-  id          String          @id @default(cuid())
-  name        String          @unique
+  id String @id @default(cuid())
+  name String @unique
   description String?
-  createdAt   DateTime        @default(now()) @map("created_at")
-  updatedAt   DateTime        @updatedAt @map("updated_at")
-
-  users       AdminUserRole[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  users AdminUserRole[]
   permissions RolePermission[]
-
   @@map("roles")
 }
 
-// Task 4 — one permission represents access to one bounded admin capability.
-// The key is stable application data (for example "products"), not a route.
 model Permission {
-  id          String          @id @default(cuid())
-  key         String          @unique
+  id String @id @default(cuid())
+  key String @unique
   description String?
-  createdAt   DateTime        @default(now()) @map("created_at")
-
+  createdAt DateTime @default(now()) @map("created_at")
   roles RolePermission[]
-
   @@map("permissions")
 }
 
 model AdminUserRole {
-  adminUserId String    @map("admin_user_id")
-  roleId      String    @map("role_id")
-  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
-  role        Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
-
+  adminUserId String @map("admin_user_id")
+  roleId String @map("role_id")
+  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
   @@id([adminUserId, roleId])
   @@index([roleId])
   @@map("admin_user_roles")
 }
 
 model RolePermission {
-  roleId       String     @map("role_id")
-  permissionId String     @map("permission_id")
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-
+  roleId String @map("role_id")
+  permissionId String @map("permission_id")
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
   @@id([roleId, permissionId])
   @@index([permissionId])
   @@map("role_permissions")
 }
 
-/* Task 6 — catalog, variants and inventory. Prices/costs are stored as
-   integer minor units to avoid floating-point money errors. */
 model Product {
-  id          String           @id @default(cuid())
-  name        String
+  id String @id @default(cuid())
+  name String
   description String?
-  productCode String           @unique @map("product_code")
-  price       Int
-  cost        Int?
-  currency    String           @default("TRY")
-  isActive    Boolean          @default(true) @map("is_active")
-  createdAt   DateTime         @default(now()) @map("created_at")
-  updatedAt   DateTime         @updatedAt @map("updated_at")
-
+  productCode String @unique @map("product_code")
+  price Int
+  cost Int?
+  currency String @default("TRY")
+  isActive Boolean @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   variants ProductVariant[]
   offerItems OfferItem[]
-
+  orderItems OrderItem[]
   @@index([isActive])
   @@map("products")
 }
 
 model ProductVariant {
-  id            String  @id @default(cuid())
-  productId     String  @map("product_id")
-  sku           String  @unique
-  size          String?
-  color         String?
-  stockQuantity Int     @default(0) @map("stock_quantity")
-  priceOverride Int?    @map("price_override")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-
+  id String @id @default(cuid())
+  productId String @map("product_id")
+  sku String @unique
+  size String?
+  color String?
+  stockQuantity Int @default(0) @map("stock_quantity")
+  priceOverride Int? @map("price_override")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
+  orderItems OrderItem[]
   @@index([productId])
   @@map("product_variants")
 }
 
 model Offer {
-  id          String      @id @default(cuid())
-  name        String
-  code        String      @unique
+  id String @id @default(cuid())
+  name String
+  code String @unique
   description String?
-  price       Int
-  quantity    Int         @default(1)
-  isActive    Boolean     @default(true) @map("is_active")
-  startsAt    DateTime?   @map("starts_at")
-  endsAt      DateTime?   @map("ends_at")
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
-
+  price Int
+  quantity Int @default(1)
+  isActive Boolean @default(true) @map("is_active")
+  startsAt DateTime? @map("starts_at")
+  endsAt DateTime? @map("ends_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   items OfferItem[]
-
   @@index([isActive])
   @@map("offers")
 }
 
 model OfferItem {
-  offerId   String  @map("offer_id")
-  productId String  @map("product_id")
-  quantity  Int     @default(1)
-  offer     Offer   @relation(fields: [offerId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
-
+  offerId String @map("offer_id")
+  productId String @map("product_id")
+  quantity Int @default(1)
+  offer Offer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
   @@id([offerId, productId])
   @@index([productId])
   @@map("offer_items")
+}
+
+model Customer {
+  id String @id @default(cuid())
+  name String
+  phone String @unique
+  email String?
+  address String?
+  notes String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  orders Order[]
+  @@index([name])
+  @@map("customers")
+}
+
+model Order {
+  id String @id @default(cuid())
+  orderNumber String @unique @map("order_number")
+  customerId String @map("customer_id")
+  status String @default("received")
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  items OrderItem[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@index([customerId])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id String @id @default(cuid())
+  orderId String @map("order_id")
+  productId String @map("product_id")
+  variantId String? @map("variant_id")
+  productName String @map("product_name")
+  sku String?
+  size String?
+  color String?
+  unitPrice Int @map("unit_price")
+  quantity Int
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  @@index([orderId])
+  @@index([productId])
+  @@index([variantId])
+  @@map("order_items")
 }
