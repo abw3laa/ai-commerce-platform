@@ -6,7 +6,7 @@ permissions:
   contents: write
 jobs:
   lockfile:
-    if: !contains(github.event.head_commit.message, 'chore(task9): generate lockfile')
+    if: ${{ !contains(github.event.head_commit.message, 'chore(task9): generate lockfile') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
