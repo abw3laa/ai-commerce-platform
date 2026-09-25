@@ -14,6 +14,7 @@ import { adminPaymentsRoutes } from "./routes/admin-payments.js";
 import { adminShippingRoutes } from "./routes/admin-shipping.js";
 import { adminWhatsAppRoutes } from "./routes/admin-whatsapp.js";
 import { adminAiRoutes } from "./routes/admin-ai.js";
+import { adminUiRoutes } from "./routes/admin-ui.js";
 
 /**
  * Builds (but does not start listening) a Fastify instance. Async because
@@ -41,6 +42,12 @@ export async function buildApp(
       : Fastify({ logger: { level: env.LOG_LEVEL } });
 
   app.register(healthRoutes);
+  app.addHook("onSend", async (_request, reply) => {
+    reply.header("x-content-type-options", "nosniff");
+    reply.header("referrer-policy", "no-referrer");
+    reply.header("x-frame-options", "DENY");
+    reply.header("permissions-policy", "camera=(), microphone=(), geolocation=()");
+  });
 
   let resolvedDeps: AuthRepositories;
   let authorizationRepo: AuthorizationRepository | undefined;
@@ -181,6 +188,7 @@ export async function buildApp(
       : { complete: async () => { throw new Error("ai_provider_not_configured"); } };
     const engine = createCommerceEngine(provider, createCommerceTools({products:productRepo,orders:orderRepo,payments:paymentRepo,shipping:shipmentRepo}));
     await app.register(adminAiRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,engine,isProduction:env.NODE_ENV==="production"});
+    await app.register(adminUiRoutes, {prefix:"/admin",deps:resolvedDeps,authorizationRepo,isProduction:env.NODE_ENV==="production"});
   }
 
   return app;
