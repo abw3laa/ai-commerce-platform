@@ -102,6 +102,32 @@ model MediaAsset {
   @@map("media_assets")
 }
 
+model Category {
+  id String @id @default(cuid())
+  name String
+  slug String @unique
+  isActive Boolean @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  products Product[]
+  @@index([isActive])
+  @@map("categories")
+}
+
+model MediaAsset {
+  id String @id @default(cuid())
+  ownerType String @map("owner_type")
+  ownerId String @map("owner_id")
+  kind String
+  originalName String @map("original_name")
+  mimeType String @map("mime_type")
+  storageKey String @unique @map("storage_key")
+  sizeBytes Int @map("size_bytes")
+  createdAt DateTime @default(now()) @map("created_at")
+  @@index([ownerType, ownerId])
+  @@map("media_assets")
+}
+
 model Product {
   id String @id @default(cuid())
   name String
