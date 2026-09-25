@@ -97,6 +97,7 @@ model MediaAsset {
   mimeType String @map("mime_type")
   storageKey String @unique @map("storage_key")
   sizeBytes Int @map("size_bytes")
+  ocrText String? @map("ocr_text")
   createdAt DateTime @default(now()) @map("created_at")
   @@index([ownerType, ownerId])
   @@map("media_assets")
