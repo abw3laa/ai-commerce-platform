@@ -1,0 +1,4 @@
+export type WhatsAppDirection="inbound"|"outbound";
+export interface ConversationRecord{id:string;customerId:string|null;channel:"whatsapp";externalId:string;lastMessageAt:Date|null;createdAt:Date;updatedAt:Date;}
+export interface ConversationMessageRecord{id:string;conversationId:string;externalId:string;direction:WhatsAppDirection;messageType:string;body:string|null;fromAddress:string|null;toAddress:string|null;createdAt:Date;}
+export interface ConversationRepository{getOrCreate(externalId:string,customerId?:string|null):Promise<ConversationRecord>;addMessage(input:{conversationId:string;externalId:string;direction:WhatsAppDirection;messageType?:string;body?:string|null;fromAddress?:string|null;toAddress?:string|null}):Promise<ConversationMessageRecord>;listMessages(conversationId:string,limit:number):Promise<ConversationMessageRecord[]>;}
