@@ -1,0 +1,8 @@
+import type {PrismaClient} from "../../generated/prisma/client.js";
+import type {PaymentRepository,PaymentRecord} from "./types.js";
+function code(e:unknown){return typeof e==="object"&&e!==null&&"code"in e&&typeof e.code==="string"?e.code:undefined;}
+export function createPrismaPaymentRepository(prisma:PrismaClient):PaymentRepository{return{
+ async getByOrderId(orderId){return prisma.payment.findUnique({where:{orderId}}) as Promise<PaymentRecord|null>;},
+ async upsert(i){const order=await prisma.order.findUnique({where:{id:i.orderId}});if(!order)throw new Error("order_not_found");try{return await prisma.payment.upsert({where:{orderId:i.orderId},create:{orderId:i.orderId,method:i.method,amount:i.amount,reference:i.reference??null},update:{method:i.method,amount:i.amount,reference:i.reference??null}}) as unknown as PaymentRecord;}catch(e){if(code(e)==="P2025")throw new Error("order_not_found",{cause:e});throw e;}},
+ async setStatus(id,status,rejectionReason=null){const current=await prisma.payment.findUnique({where:{id}});if(!current)return null;if(current.status==="approved"&&status!=="approved")return {error:"invalid_transition"};if(current.status==="rejected"&&status==="rejected")return {error:"invalid_transition"};if(current.status==="rejected"&&status==="pending"){ /* allow resubmission */ } else if(current.status==="rejected"&&status!=="approved")return {error:"invalid_transition"};return prisma.payment.update({where:{id},data:{status,rejectionReason:status==="rejected"?rejectionReason:null,verifiedAt:status==="approved"?new Date():null}}) as unknown as Promise<PaymentRecord>;}
+};}

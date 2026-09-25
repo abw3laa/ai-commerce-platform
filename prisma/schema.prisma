@@ -159,6 +159,8 @@ model Order {
   status String @default("received")
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
   items OrderItem[]
+  payment Payment?
+  shipment Shipment?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   @@index([customerId])
@@ -184,4 +186,37 @@ model OrderItem {
   @@index([productId])
   @@index([variantId])
   @@map("order_items")
+}
+
+
+model Payment {
+  id String @id @default(cuid())
+  orderId String @unique @map("order_id")
+  method String
+  status String @default("pending")
+  amount Int
+  reference String?
+  rejectionReason String? @map("rejection_reason")
+  verifiedAt DateTime? @map("verified_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  @@index([status])
+  @@map("payments")
+}
+
+model Shipment {
+  id String @id @default(cuid())
+  orderId String @unique @map("order_id")
+  status String @default("pending")
+  carrier String?
+  trackingCode String? @map("tracking_code")
+  trackingUrl String? @map("tracking_url")
+  shippedAt DateTime? @map("shipped_at")
+  deliveredAt DateTime? @map("delivered_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  @@index([status])
+  @@map("shipments")
 }

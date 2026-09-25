@@ -1,0 +1,7 @@
+import type {PaymentRepository,PaymentRecord,PaymentStatus} from "./types.js";
+import {PAYMENT_STATUSES} from "./types.js";
+export function createInMemoryPaymentRepository():PaymentRepository{const data:PaymentRecord[]=[];let n=0;return{
+ async getByOrderId(id){return data.find(x=>x.orderId===id)??null;},
+ async upsert(i){const old=data.find(x=>x.orderId===i.orderId);if(old){old.method=i.method;old.amount=i.amount;old.reference=i.reference??null;old.updatedAt=new Date();return old;}const now=new Date(),r={id:`payment-${++n}`,orderId:i.orderId,method:i.method,status:"pending" as PaymentStatus,amount:i.amount,reference:i.reference??null,rejectionReason:null,verifiedAt:null,createdAt:now,updatedAt:now};data.push(r);return r;},
+ async setStatus(id,status,rejectionReason=null){if(!PAYMENT_STATUSES.includes(status))throw new Error("invalid_status");const r=data.find(x=>x.id===id);if(!r)return null;if(r.status==="approved"&&status!=="approved")return {error:"invalid_transition"};if(r.status==="rejected"&&status==="pending"){r.rejectionReason=null;}else if(r.status==="rejected"&&status!=="approved")return {error:"invalid_transition"};r.status=status;r.rejectionReason=status==="rejected"?rejectionReason??null:null;r.verifiedAt=status==="approved"?new Date():null;r.updatedAt=new Date();return r;}
+};}
