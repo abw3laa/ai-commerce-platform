@@ -1,8 +1,8 @@
 # AI Commerce & Automation Platform — backend service
 
-Status: **Phase 1 / Task 9 — WhatsApp Commerce.** Tasks 1–8 are complete:
+Status: **Phase 1 / Task 10 — AI Commerce Engine.** Tasks 1–9 are complete:
 foundation, authentication/RBAC, catalog, customers/orders, payments, and
-shipping. This task adds the Baileys WhatsApp connector and conversation persistence.
+shipping. This task adds a tool-driven AI commerce engine with strict catalog/order facts and an OpenAI-compatible provider.
 
 ## Stack decisions made so far (see project chat log for full reasoning)
 
@@ -172,9 +172,14 @@ endpoints expose connection status, sending text messages, and conversation
 history under the `conversations` permission. QR/pairing-code presentation and
 the AI reply engine are separate concerns handled by the later admin/AI work.
 
+## AI Commerce Engine
+
+The AI engine uses a provider abstraction and a bounded commerce tool registry. Product price and stock come only from the catalog repository; order, payment, and shipping state comes only from their repositories. Unknown tools and tool execution failures fail closed. The provider is configured with `AI_API_URL`, `AI_API_KEY`, and `AI_MODEL`; without credentials the protected AI endpoint returns a provider-unavailable response rather than inventing an answer.
+
+The protected `POST /admin/ai/respond` endpoint requires the `ai` permission. The engine is limited to four tool rounds per request to prevent unbounded tool execution. Voice, social channels, workflow automation, and the final admin UI remain later scope.
+
 ## Not built yet (upcoming tasks, in the agreed phase order)
 
-The AI core, automation/reporting, admin application completion, and later
-production hardening — each as its own small task with its own tests.
+Automation/reporting, completion of the admin application, and production hardening — each as its own small task with its own tests.
 
  

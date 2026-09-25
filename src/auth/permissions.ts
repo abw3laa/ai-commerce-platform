@@ -6,6 +6,7 @@ export const ADMIN_PERMISSIONS = [
   "payments",
   "shipping",
   "conversations",
+  "ai",
   "settings",
   "users/permissions",
 ] as const;
