@@ -1,8 +1,7 @@
 # AI Commerce & Automation Platform — backend service
 
-Status: **Phase 13 — Media & Catalog Completion (in progress on task13/media-catalog).**
-foundation, authentication/RBAC, catalog, customers/orders, payments, and
-shipping. This task adds a tool-driven AI commerce engine with strict catalog/order facts and an OpenAI-compatible provider.
+Status: **Tasks 1–20 implemented and CI-verified on their PR heads.**
+The repository contains the commerce foundation, admin/RBAC, catalog/media, orders/payments/shipping, WhatsApp, AI commerce, conversation memory/handoff, normalized omnichannel ingress, and production deployment/backup hardening. This task adds a tool-driven AI commerce engine with strict catalog/order facts and an OpenAI-compatible provider.
 
 ## Stack decisions made so far (see project chat log for full reasoning)
 
@@ -176,7 +175,7 @@ the AI reply engine are separate concerns handled by the later admin/AI work.
 
 The AI engine uses a provider abstraction and a bounded commerce tool registry. Product price and stock come only from the catalog repository; order, payment, and shipping state comes only from their repositories. Unknown tools and tool execution failures fail closed. The provider is configured with `AI_API_URL`, `AI_API_KEY`, and `AI_MODEL`; without credentials the protected AI endpoint returns a provider-unavailable response rather than inventing an answer.
 
-The protected `POST /admin/ai/respond` endpoint requires the `ai` permission. The engine is limited to four tool rounds per request to prevent unbounded tool execution. Voice, social channels, workflow automation, and the final admin UI remain later scope.
+The protected `POST /admin/ai/respond` endpoint requires the `ai` permission. The engine is limited to six tool rounds per request to prevent unbounded tool execution. Voice and provider-specific social credentials remain deployment configuration; normalized channel ingress is implemented.
 
 ## Admin Application & Production Hardening
 
@@ -201,3 +200,10 @@ The current admin application is available at `/admin/login` and `/admin/app` af
 The catalog foundation now includes categories and a PostgreSQL-backed media metadata store. Product media and offer media are stored under the configured `MEDIA_STORAGE_DIR`; the database stores only metadata and a generated storage key. Admin media endpoints require the existing `products` permission and accept only JPEG, PNG, WebP, GIF, MP4, and WebM uploads up to 10 MB per object. Product variants remain the source of truth for size, color, SKU, and stock.
 
 Category records use a unique slug and can be enabled/disabled. Products can optionally reference a category. Media files are not exposed through an unauthenticated public route; the current download endpoint is protected by admin authentication.
+
+
+## Tasks 17–20
+
+Task 17 connects inbound WhatsApp messages to the bounded AI commerce engine and persists AI replies. Task 18 gates WhatsApp order creation on an explicit short confirmation in Arabic, English, or Turkish. Task 19 adds the shared channel model and normalized ingress core for WhatsApp, Messenger, Facebook, Instagram, and TikTok. Task 20 adds production backup/restore scripts, Docker health checks, a production Compose definition, and security/deployment guidance.
+
+Provider-specific social integrations still require the corresponding platform applications, permissions, credentials, webhook configuration, and platform-side approval. Those are external deployment prerequisites rather than values that can safely be committed to this repository.
