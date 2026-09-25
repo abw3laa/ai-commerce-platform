@@ -18,6 +18,7 @@ const envSchema = z.object({
   // schema.prisma automatically). No default — a missing connection
   // string must fail loudly at boot, not silently fall back to anything.
   DATABASE_URL: z.string().min(1),
+  WHATSAPP_AUTH_DIR: z.string().min(1).default("./data/whatsapp-auth"),
 });
 
 export type Env = z.infer<typeof envSchema>;
