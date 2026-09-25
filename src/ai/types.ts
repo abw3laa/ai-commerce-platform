@@ -1,5 +1,5 @@
 export type AiRole="system"|"user"|"assistant"|"tool";
-export interface AiMessage{role:AiRole;content:string;toolCallId?:string;toolName?:string;}
+export interface AiMessage{role:AiRole;content:string;toolCallId?:string;toolName?:string;toolCalls?:AiToolCall[];}
 export interface AiToolCall{name:string;arguments:Record<string,unknown>;id:string;}
 export interface AiCompletion{message:AiMessage;toolCalls?:AiToolCall[];}
 export interface AiProvider{complete(input:{messages:AiMessage[];tools:AiToolDefinition[]}):Promise<AiCompletion>;}
