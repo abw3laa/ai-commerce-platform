@@ -7,6 +7,7 @@ COPY prisma.config.ts tsconfig*.json ./
 COPY src ./src
 RUN npx prisma generate && npm run build
 FROM node:22-alpine
+RUN apk add --no-cache tesseract-ocr tesseract-ocr-data-eng tesseract-ocr-data-tur tesseract-ocr-data-ara
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/package*.json ./
