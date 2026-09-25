@@ -19,6 +19,9 @@ const envSchema = z.object({
   // string must fail loudly at boot, not silently fall back to anything.
   DATABASE_URL: z.string().min(1),
   WHATSAPP_AUTH_DIR: z.string().min(1).default("./data/whatsapp-auth"),
+  AI_API_URL: z.string().url().optional(),
+  AI_API_KEY: z.string().min(1).optional(),
+  AI_MODEL: z.string().min(1).default("gpt-5.6"),
 });
 
 export type Env = z.infer<typeof envSchema>;
