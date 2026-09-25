@@ -49,13 +49,13 @@ export async function buildApp(env:Env=loadEnv(),deps?:AuthRepositories):Promise
   await app.register(adminPaymentsRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,paymentRepo,isProduction:env.NODE_ENV==="production"});
   await app.register(adminShippingRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,shipmentRepo,isProduction:env.NODE_ENV==="production"});
   await app.register(adminReportsRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,productRepo,customerRepo,orderRepo,paymentRepo,shipmentRepo,isProduction:env.NODE_ENV==="production"});
+  const {createCommerceTools}=await import("./ai/tools.js");const {createCommerceEngine}=await import("./ai/engine.js");const {createOpenAiCompatibleProvider}=await import("./ai/openai-compatible-provider.js");
+  const provider=env.AI_API_URL&&env.AI_API_KEY?createOpenAiCompatibleProvider({url:env.AI_API_URL,apiKey:env.AI_API_KEY,model:env.AI_MODEL}):{complete:async()=>{throw new Error("ai_provider_not_configured");}};
+  const engine=createCommerceEngine(provider,({customerId,allowOrderCreation})=>createCommerceTools({products:productRepo,orders:orderRepo,payments:paymentRepo,shipping:shipmentRepo,knowledge:knowledgeRepo,customerId,canCreateOrder:allowOrderCreation===true}));
   const {createWhatsAppAiInboundHandler}=await import("./whatsapp/ai-inbound-handler.js");
   await whatsapp.onText(createWhatsAppAiInboundHandler({customerRepo,conversationRepo,connector:whatsapp,engine}));
   await whatsapp.connect();
   await app.register(adminOrdersRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,orderRepo,customerRepo,whatsapp,isProduction:env.NODE_ENV==="production"});
-  const {createCommerceTools}=await import("./ai/tools.js");const {createCommerceEngine}=await import("./ai/engine.js");const {createOpenAiCompatibleProvider}=await import("./ai/openai-compatible-provider.js");
-  const provider=env.AI_API_URL&&env.AI_API_KEY?createOpenAiCompatibleProvider({url:env.AI_API_URL,apiKey:env.AI_API_KEY,model:env.AI_MODEL}):{complete:async()=>{throw new Error("ai_provider_not_configured");}};
-  const engine=createCommerceEngine(provider,({customerId,allowOrderCreation})=>createCommerceTools({products:productRepo,orders:orderRepo,payments:paymentRepo,shipping:shipmentRepo,knowledge:knowledgeRepo,customerId,canCreateOrder:allowOrderCreation===true}));
   await app.register(adminAiRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,engine,conversationRepo,isProduction:env.NODE_ENV==="production"});
   await app.register(adminUiRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,isProduction:env.NODE_ENV==="production"});
  }
