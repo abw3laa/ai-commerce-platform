@@ -1,0 +1,9 @@
+node_modules
+dist
+generated/prisma
+.git
+.github
+.env
+backups
+data
+tests
