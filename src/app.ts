@@ -19,10 +19,12 @@ import {adminUiRoutes} from "./routes/admin-ui.js";
 import {adminReportsRoutes} from "./routes/admin-reports.js";
 import {createHttpShipmentTracker} from "./shipping/tracker.js";
 import {adminCatalogRoutes} from "./routes/admin-catalog.js";
+import {channelWebhookRoutes} from "./routes/channel-webhooks.js";
 export async function buildApp(env:Env=loadEnv(),deps?:AuthRepositories):Promise<FastifyInstance>{
  const app=env.NODE_ENV==="development"?Fastify({logger:{level:env.LOG_LEVEL,transport:{target:"pino-pretty",options:{colorize:true}}}}):Fastify({logger:{level:env.LOG_LEVEL}});
  app.addContentTypeParser("application/octet-stream",{parseAs:"buffer"},(_req,body,done)=>done(null,body));
  app.register(healthRoutes);
+  await app.register(channelWebhookRoutes,{...(env.TIKTOK_CLIENT_SECRET?{tiktokClientSecret:env.TIKTOK_CLIENT_SECRET}:{}),processInbound:async()=>{}});
  app.addHook("onSend",async(_request,reply)=>{reply.header("x-content-type-options","nosniff");reply.header("referrer-policy","no-referrer");reply.header("x-frame-options","DENY");reply.header("permissions-policy","camera=(), microphone=(), geolocation=()");});
  let resolvedDeps:AuthRepositories;let authorizationRepo:AuthorizationRepository|undefined;let productRepo:any;let offerRepo:any;let customerRepo:any;let orderRepo:any;let paymentRepo:any;let shipmentRepo:any;let conversationRepo:any;let categoryRepo:any;let mediaRepo:any;let knowledgeRepo:any;
  if(deps){resolvedDeps=deps;}else{
