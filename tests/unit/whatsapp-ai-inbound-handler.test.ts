@@ -32,6 +32,7 @@ describe("WhatsApp AI inbound handler", () => {
       ]})),
     };
     const connector = {
+      requestPairingCode: vi.fn(async () => "ABCD-1234"),
       connect: vi.fn(), getConnection: vi.fn(), sendText: vi.fn(async()=>({externalId:"out-1"})),
       onText: vi.fn(), close: vi.fn(),
     };
