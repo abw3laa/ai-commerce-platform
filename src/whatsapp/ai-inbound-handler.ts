@@ -1,3 +1,9 @@
+export function isExplicitOrderConfirmation(message: string): boolean {
+  const normalized = message.trim().toLocaleLowerCase();
+  if (!normalized || normalized.length > 120) return false;
+  return /^(نعم|اي|إي|ايوه|أيوه|تمام|موافق|موافقة|أكد|اكيد|أكيد|نعم أكد|نعم اكد|yes|yeah|yep|ok|okay|confirm|confirmed|approve|evet|tamam|onaylıyorum|onayliyorum|onay|peki)$/.test(normalized);
+}
+
 import type { CommerceEngine } from "../ai/types.js";
 import { buildPromptContext } from "../conversations/context.js";
 import type { ConversationRepository } from "../conversations/types.js";
@@ -57,7 +63,7 @@ export function createWhatsAppAiInboundHandler(o: WhatsAppAiInboundHandlerOption
       conversationId: conversation.id,
       summary: compact.summary,
       history: compact.messages,
-      allowOrderCreation: false,
+      allowOrderCreation: isExplicitOrderConfirmation(message.body),
       ...(customer?.id ? { customerId: customer.id } : {}),
     };
     const result = await o.engine.respond(input);
