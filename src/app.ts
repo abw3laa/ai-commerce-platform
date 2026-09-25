@@ -41,7 +41,8 @@ export async function buildApp(env:Env=loadEnv(),deps?:AuthRepositories):Promise
   await app.register(adminDashboardRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,isProduction:env.NODE_ENV==="production"});
   await app.register(adminProductsRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,productRepo,isProduction:env.NODE_ENV==="production"});
   await app.register(adminOffersRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,offerRepo,isProduction:env.NODE_ENV==="production"});
-  await app.register(adminCatalogRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,categoryRepo,mediaRepo,mediaStore,isProduction:env.NODE_ENV==="production"});\n  const {adminKnowledgeRoutes}=await import("./routes/admin-knowledge.js");await app.register(adminKnowledgeRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,knowledgeRepo,isProduction:env.NODE_ENV==="production"});
+  await app.register(adminCatalogRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,categoryRepo,mediaRepo,mediaStore,isProduction:env.NODE_ENV==="production"});
+  const {adminKnowledgeRoutes}=await import("./routes/admin-knowledge.js");await app.register(adminKnowledgeRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,knowledgeRepo,isProduction:env.NODE_ENV==="production"});
   const {createBaileysConnector}=await import("./whatsapp/baileys-connector.js");const whatsapp=createBaileysConnector({authDirectory:env.WHATSAPP_AUTH_DIR});
   await app.register(adminWhatsAppRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,conversationRepo,connector:whatsapp,isProduction:env.NODE_ENV==="production"});
   await app.register(adminCustomersRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,customerRepo,isProduction:env.NODE_ENV==="production"});
