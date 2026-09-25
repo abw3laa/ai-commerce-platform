@@ -1,6 +1,6 @@
 # AI Commerce & Automation Platform — backend service
 
-Status: **Phase 1 / Task 12 — Final Automation, Reporting & Operational Verification.** Tasks 1–10 are complete:
+Status: **Phase 13 — Media & Catalog Completion (in progress on task13/media-catalog).**
 foundation, authentication/RBAC, catalog, customers/orders, payments, and
 shipping. This task adds a tool-driven AI commerce engine with strict catalog/order facts and an OpenAI-compatible provider.
 
@@ -195,3 +195,9 @@ Order status changes trigger deterministic WhatsApp customer notifications when 
 The current admin application is available at `/admin/login` and `/admin/app` after deployment.
 
  
+
+## Task 13 — Media & Catalog Completion
+
+The catalog foundation now includes categories and a PostgreSQL-backed media metadata store. Product media and offer media are stored under the configured `MEDIA_STORAGE_DIR`; the database stores only metadata and a generated storage key. Admin media endpoints require the existing `products` permission and accept only JPEG, PNG, WebP, GIF, MP4, and WebM uploads up to 10 MB per object. Product variants remain the source of truth for size, color, SKU, and stock.
+
+Category records use a unique slug and can be enabled/disabled. Products can optionally reference a category. Media files are not exposed through an unauthenticated public route; the current download endpoint is protected by admin authentication.
