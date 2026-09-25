@@ -37,6 +37,7 @@ export async function buildApp(env:Env=loadEnv(),deps?:AuthRepositories):Promise
  if(!deps){
   if(!authorizationRepo||!productRepo||!offerRepo||!customerRepo||!orderRepo||!paymentRepo||!shipmentRepo||!conversationRepo||!categoryRepo||!mediaRepo)throw new Error("production dependencies not initialized");
   const {createLocalMediaStore}=await import("./storage/local-media-store.js");
+  const {createTesseractReceiptOcr}=await import("./payments/receipt-ocr.js");
   const mediaStore=createLocalMediaStore(env.MEDIA_STORAGE_DIR);
   await app.register(adminDashboardRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,isProduction:env.NODE_ENV==="production"});
   await app.register(adminProductsRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,productRepo,isProduction:env.NODE_ENV==="production"});
@@ -46,7 +47,7 @@ export async function buildApp(env:Env=loadEnv(),deps?:AuthRepositories):Promise
   const {createBaileysConnector}=await import("./whatsapp/baileys-connector.js");const whatsapp=createBaileysConnector({authDirectory:env.WHATSAPP_AUTH_DIR});
   await app.register(adminWhatsAppRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,conversationRepo,connector:whatsapp,isProduction:env.NODE_ENV==="production"});
   await app.register(adminCustomersRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,customerRepo,isProduction:env.NODE_ENV==="production"});
-  await app.register(adminPaymentsRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,paymentRepo,isProduction:env.NODE_ENV==="production"});
+  await app.register(adminPaymentsRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,paymentRepo,mediaRepo,mediaStore,receiptOcr:createTesseractReceiptOcr(),isProduction:env.NODE_ENV==="production"});
   await app.register(adminShippingRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,shipmentRepo,isProduction:env.NODE_ENV==="production"});
   await app.register(adminReportsRoutes,{prefix:"/admin",deps:resolvedDeps,authorizationRepo,productRepo,customerRepo,orderRepo,paymentRepo,shipmentRepo,isProduction:env.NODE_ENV==="production"});
   const {createCommerceTools}=await import("./ai/tools.js");const {createCommerceEngine}=await import("./ai/engine.js");const {createOpenAiCompatibleProvider}=await import("./ai/openai-compatible-provider.js");
