@@ -49,6 +49,7 @@ export async function adminProductsRoutes(app: FastifyInstance, options: AdminPr
     catch(e) {
       if(e instanceof Error && e.message==="product_code_conflict") return reply.code(409).send({error:"product_code_conflict"});
       if(e instanceof Error && e.message==="variant_sku_conflict") return reply.code(409).send({error:"variant_sku_conflict"});
+      if(e instanceof Error && e.message==="category_not_found") return reply.code(400).send({error:"category_not_found"});
       throw e;
     }
   });
@@ -63,6 +64,7 @@ export async function adminProductsRoutes(app: FastifyInstance, options: AdminPr
     if(b.price!==undefined){if(!nonNegativeInt(b.price))return reply.code(400).send({error:"invalid_product"});input.price=b.price;}
     if(b.cost!==undefined){if(b.cost!==null&&!nonNegativeInt(b.cost))return reply.code(400).send({error:"invalid_product"});input.cost=b.cost;}
     if(b.currency!==undefined){if(typeof b.currency!=="string"||!b.currency.trim())return reply.code(400).send({error:"invalid_product"});input.currency=b.currency.trim().toUpperCase();}
+    if(b.categoryId!==undefined){if(b.categoryId!==null&&typeof b.categoryId!=="string")return reply.code(400).send({error:"invalid_product"});input.categoryId=b.categoryId;}
     if(b.isActive!==undefined){if(typeof b.isActive!=="boolean")return reply.code(400).send({error:"invalid_product"});input.isActive=b.isActive;}
     try { const result=await options.productRepo.update(id,input as never); return result?reply.send(result):reply.code(404).send({error:"not_found"}); }
     catch(e){if(e instanceof Error&&e.message==="product_code_conflict")return reply.code(409).send({error:"product_code_conflict"});throw e;}
