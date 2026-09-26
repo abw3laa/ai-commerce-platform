@@ -120,3 +120,9 @@ jobs:
       - name: Assemble Android admin
         working-directory: android-admin
         run: gradle assembleDebug --no-daemon -PADMIN_BASE_URL=https://CHANGE-ME.example/admin/app
+      - name: Upload Android debug APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: ai-commerce-admin-android-debug
+          path: android-admin/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
