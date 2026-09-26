@@ -223,7 +223,7 @@ Provider-specific social integrations still require the corresponding platform a
 
 ## Android Admin
 
-A lightweight Android Admin client is included under `android-admin/`. It wraps the existing `/admin/app` session UI rather than duplicating the entire backend API in a second client stack. It requires an HTTPS `ADMIN_BASE_URL` at build time, blocks cleartext traffic, restricts WebView navigation to the configured HTTPS origin, disables file/content access, and does not hardcode credentials. Build it with Android Studio or Gradle 9.6 and pass `-PADMIN_BASE_URL=https://your-domain/admin/app`. Android network security follows the platform guidance to use HTTPS and disable cleartext traffic. citeturn1search0turn1search1
+A lightweight Android Admin client is included under `android-admin/`. It wraps the existing `/admin/app` session UI rather than duplicating the entire backend API in a second client stack. It requires an HTTPS `ADMIN_BASE_URL` at build time, blocks cleartext traffic, restricts WebView navigation to the configured HTTPS origin, disables file/content access, and does not hardcode credentials. Build it with Android Studio or Gradle 9.6 and pass `-PADMIN_BASE_URL=https://your-domain/admin/app`. Android network security is configured to require HTTPS and reject cleartext traffic.
 
 ## Security hardening
 
