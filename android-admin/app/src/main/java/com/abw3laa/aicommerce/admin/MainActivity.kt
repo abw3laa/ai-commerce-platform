@@ -21,7 +21,7 @@ class MainActivity : Activity() {
 
         webView = WebView(this)
         webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = false
+        webView.settings.domStorageEnabled = true
         webView.settings.allowFileAccess = false
         webView.settings.allowContentAccess = false
         webView.settings.setSupportMultipleWindows(false)

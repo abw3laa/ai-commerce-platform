@@ -5,6 +5,8 @@
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:label="AI Commerce Admin"
+        android:icon="@drawable/ic_admin_logo"
+        android:roundIcon="@drawable/ic_admin_logo"
         android:usesCleartextTraffic="false"
         android:theme="@style/AppTheme"
         android:networkSecurityConfig="@xml/network_security_config">
