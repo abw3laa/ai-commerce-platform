@@ -46,7 +46,8 @@ class MainActivity : Activity() {
             val candidate = URI(url)
             candidate.scheme == "https" &&
                 candidate.host == baseUri.host &&
-                effectivePort(candidate) == effectivePort(baseUri)
+                effectivePort(candidate) == effectivePort(baseUri) &&
+                (candidate.path == baseUri.path || candidate.path.startsWith("/admin/"))
         } catch (_: Exception) {
             false
         }
@@ -66,7 +67,6 @@ class MainActivity : Activity() {
     override fun onDestroy() {
         webView.stopLoading()
         webView.webChromeClient = null
-        webView.webViewClient = null
         webView.destroy()
         super.onDestroy()
     }
