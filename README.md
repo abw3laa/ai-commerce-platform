@@ -1,6 +1,6 @@
 # AI Commerce & Automation Platform — backend service
 
-Status: **Tasks 1–20 implemented and CI-verified on their PR heads.**
+Status: **Tasks 1–21 implemented and CI-verified on Main.**
 The repository contains the commerce foundation, admin/RBAC, catalog/media, orders/payments/shipping, WhatsApp, AI commerce, conversation memory/handoff, normalized omnichannel ingress, and production deployment/backup hardening. This task adds a tool-driven AI commerce engine with strict catalog/order facts and an OpenAI-compatible provider.
 
 ## Stack decisions made so far (see project chat log for full reasoning)
@@ -93,7 +93,7 @@ outside the workflow — no local database, no external service.
   Payment supports `prepaid`, `bank_transfer`, and `pay_later`, with pending,
   approved, and rejected verification states. Shipment tracks carrier,
   tracking code/URL, and the lifecycle `pending → shipped → on_the_way → delivered`.
-  Receipt OCR and external carrier integrations remain deferred.
+  Receipt OCR is implemented with local Tesseract; shipping exposes a provider-agnostic tracking boundary that requires real carrier credentials at deployment.
 
 Prisma ORM 7 moved the CLI's database connection, schema path, and
 migrations folder out of `schema.prisma` and into `prisma.config.ts`.
@@ -144,7 +144,7 @@ zero fakes anywhere) needs a real, migrated PostgreSQL and only runs in
 CI — which is also where `prisma generate`/`migrate deploy`/`typecheck`/
 `build` get their real, authoritative verification for the same reason.
 
-## Products, inventory, and offers\n\nThe admin API now exposes protected catalog endpoints under `/admin`: product\nlist/create/update, variant stock updates, and bundle offer list/create/update.\n`products` permission controls catalog and offers; `inventory` controls stock\nchanges. Prices are stored as integer currency units in this first catalog task;\nprecision beyond whole units is intentionally deferred. Media upload/storage is intentionally deferred until the storage\ntask is defined.\n\n## Current admin panel
+## Products, inventory, and offers\n\nThe admin API now exposes protected catalog endpoints under `/admin`: product\nlist/create/update, variant stock updates, and bundle offer list/create/update.\n`products` permission controls catalog and offers; `inventory` controls stock\nchanges. Prices are stored as integer currency units in this first catalog task;\nprecision beyond whole units is intentionally deferred. Media upload/storage is implemented with persistent media records and production media storage.\n\n## Current admin panel
 
 `GET /admin/dashboard` is protected by the session authentication guard and
 renders a small server-side dashboard. It shows the authenticated admin,
@@ -207,3 +207,22 @@ Category records use a unique slug and can be enabled/disabled. Products can opt
 Task 17 connects inbound WhatsApp messages to the bounded AI commerce engine and persists AI replies. Task 18 gates WhatsApp order creation on an explicit short confirmation in Arabic, English, or Turkish. Task 19 adds the shared channel model and normalized ingress core for WhatsApp, Messenger, Facebook, Instagram, and TikTok. Task 20 adds production backup/restore scripts, Docker health checks, a production Compose definition, and security/deployment guidance.
 
 Provider-specific social integrations still require the corresponding platform applications, permissions, credentials, webhook configuration, and platform-side approval. Those are external deployment prerequisites rather than values that can safely be committed to this repository.
+
+
+## Tasks 13–21 completion status
+
+- Task 13 — catalog/media completion: implemented.
+- Task 14 — WhatsApp production connection: QR, pairing code, persistent Baileys credentials, reconnect, inbound/outbound text: implemented.
+- Task 15 — conversation state and human handoff: implemented.
+- Task 16 — AI commerce engine 2.0: bounded tools, strict catalog/order facts, multilingual provider boundary: implemented.
+- Task 17 — payment receipt upload and OCR: implemented with local Tesseract for Arabic, Turkish, and English receipt images.
+- Task 18 — shipping automation boundary: shipment status synchronization and provider-agnostic tracking client implemented; actual carrier credentials/API approval remain deployment prerequisites.
+- Task 19 — social webhook hardening: normalized channel core and verified TikTok webhook ingress implemented; provider-side Meta/TikTok app credentials and approved capabilities remain deployment prerequisites.
+- Task 20 — production operations: backups, restore tooling, readiness monitoring, metrics, alert hook, production Docker configuration, and Oracle deployment runbook implemented.
+- Task 21 — optimization: bounded conversation memory is chronological and avoids duplicating the current inbound message in AI history.
+
+## Final verification
+
+Main currently has no open pull requests or open issues. CI run 504 on commit 155452b09005913594fbc232182ac91549fc6c7f completed successfully after Prisma migrations, typecheck, lint, tests, build, production-script validation, and production Docker image build.
+
+Deployment-dependent items are deliberately not represented as completed provider connections: WhatsApp account pairing, AI provider credentials, carrier credentials, and social-platform app permissions must be supplied on the production environment.
