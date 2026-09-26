@@ -16,7 +16,8 @@
     "seed:rbac": "tsx src/scripts/seed-rbac.ts",
     "backup:db": "./scripts/backup-postgres.sh",
     "restore:db": "./scripts/restore-postgres.sh",
-    "verify:production": "./scripts/verify-production.sh"
+    "verify:production": "./scripts/verify-production.sh",
+    "security:smoke": "./scripts/security-smoke.sh"
   },
   "keywords": [],
   "author": "",
