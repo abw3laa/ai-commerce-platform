@@ -22,6 +22,7 @@ import {createHttpShipmentTracker} from "./shipping/tracker.js";
 import {adminCatalogRoutes} from "./routes/admin-catalog.js";
 import {channelWebhookRoutes} from "./routes/channel-webhooks.js";
 import {createMetrics,metricsText} from "./ops/metrics.js";
+import {isCrossSiteRequest,isUnsafeAdminRequest} from "./security/request-protection.js";
 export async function buildApp(env:Env=loadEnv(),deps?:AuthRepositories):Promise<FastifyInstance>{
  const metrics=createMetrics();
  const requestStartedAt=new WeakMap<object,number>();
