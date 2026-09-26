@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import fs from "node:fs";
 
 const reportPath = process.argv[2] ?? "/tmp/npm-audit.json";
