@@ -89,30 +89,10 @@ jobs:
           set +e
           npm audit --omit=dev --omit=optional --json > /tmp/npm-audit.json
           audit_exit=$?
-          node - <<'NODE'
-          const fs = require("node:fs");
-          const report = JSON.parse(fs.readFileSync("/tmp/npm-audit.json", "utf8"));
-          for (const [name, item] of Object.entries(report.vulnerabilities ?? {})) {
-            if (!["high", "critical"].includes(item.severity)) continue;
-            const via = (item.via ?? []).filter(v => typeof v === "object");
-            console.log(JSON.stringify({
-              package: name,
-              severity: item.severity,
-              range: item.range,
-              fixes: item.fixAvailable,
-              advisories: via.map(v => ({title: v.title, url: v.url, severity: v.severity, range: v.range}))
-            }));
-          }
-          console.log(JSON.stringify({metadata: report.metadata?.vulnerabilities ?? {}}));
-          const allowed = new Set(["@prisma/config","prisma","deepmerge-ts","mysql2"]);
-          const unexpected = Object.entries(report.vulnerabilities ?? {}).filter(([name,item]) => ["high","critical"].includes(item.severity) && !allowed.has(name));
-          if (unexpected.length) {
-            console.error("Unexpected high/critical dependency findings:", unexpected.map(([name,item]) => ({name,severity:item.severity,range:item.range})));
-            process.exit(1);
-          }
-          console.log("Only documented Prisma 7.10 devOptional findings remain in the full audit tree.");
-          process.exit(0);
-          NODE
+          node scripts/check-npm-audit.mjs /tmp/npm-audit.json
+          check_exit=$?
+          if [ $check_exit -ne 0 ]; then exit $check_exit; fi
+          if [ $audit_exit -ne 0 ]; then echo "npm audit reported only documented Prisma 7.10 devOptional findings; continuing."; fi
 
       - name: Validate production scripts
         run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh scripts/verify-production.sh scripts/monitor-production.sh scripts/security-smoke.sh
