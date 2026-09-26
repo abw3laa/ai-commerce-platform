@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import Fastify from "fastify";
-import { isCrossSiteRequest, isUnsafeAdminRequest } from "./request-protection.js";
+import { isCrossSiteRequest, isUnsafeAdminRequest } from "../../src/security/request-protection.js";
 
 describe("request protection", () => {
   it("identifies unsafe admin requests", async () => {
