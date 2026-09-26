@@ -3,7 +3,7 @@ import type { FastifyRequest } from "fastify";
 const UNSAFE_METHODS = new Set(["POST","PUT","PATCH","DELETE"]);
 
 export function isUnsafeAdminRequest(request: FastifyRequest): boolean {
-  return request.url.split("?",1)[0].startsWith("/admin/") && UNSAFE_METHODS.has(request.method);
+  return (request.url.split("?",1)[0] ?? "").startsWith("/admin/") && UNSAFE_METHODS.has(request.method);
 }
 
 export function isCrossSiteRequest(request: FastifyRequest): boolean {
