@@ -84,8 +84,39 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Dependency vulnerability audit
+        run: |
+          set +e
+          npm audit --omit=dev --omit=optional --json > /tmp/npm-audit.json
+          audit_exit=$?
+          node scripts/check-npm-audit.mjs /tmp/npm-audit.json
+          check_exit=$?
+          if [ $check_exit -ne 0 ]; then exit $check_exit; fi
+          if [ $audit_exit -ne 0 ]; then echo "npm audit reported only documented Prisma 7.10 devOptional findings; continuing."; fi
+
       - name: Validate production scripts
-        run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh scripts/verify-production.sh scripts/monitor-production.sh
+        run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh scripts/verify-production.sh scripts/monitor-production.sh scripts/security-smoke.sh
 
       - name: Build production Docker image
         run: docker build --pull -t ai-commerce-platform:ci .
+
+  android:
+    name: Android admin build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: "9.6.0"
+      - name: Assemble Android admin
+        working-directory: android-admin
+        run: gradle assembleDebug --no-daemon -PADMIN_BASE_URL=https://CHANGE-ME.example/admin/app

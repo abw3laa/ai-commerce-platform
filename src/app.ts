@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Fastify,{type FastifyInstance} from "fastify";
+import {timingSafeEqual} from "node:crypto";
 import fastifyRateLimit from "@fastify/rate-limit";
 import {loadEnv,type Env} from "./config/env.js";
 import {healthRoutes} from "./routes/health.js";
@@ -21,13 +22,32 @@ import {createHttpShipmentTracker} from "./shipping/tracker.js";
 import {adminCatalogRoutes} from "./routes/admin-catalog.js";
 import {channelWebhookRoutes} from "./routes/channel-webhooks.js";
 import {createMetrics,metricsText} from "./ops/metrics.js";
+import {isCrossSiteRequest,isUnsafeAdminRequest} from "./security/request-protection.js";
 export async function buildApp(env:Env=loadEnv(),deps?:AuthRepositories):Promise<FastifyInstance>{
  const metrics=createMetrics();
  const requestStartedAt=new WeakMap<object,number>();
  const app=env.NODE_ENV==="development"?Fastify({logger:{level:env.LOG_LEVEL,transport:{target:"pino-pretty",options:{colorize:true}}}}):Fastify({logger:{level:env.LOG_LEVEL}});
  app.addHook("onRequest",async(request)=>{metrics.requests++;requestStartedAt.set(request,Date.now());});
  app.addHook("onResponse",async(request,reply)=>{metrics.requestDurationMs+=Date.now()-(requestStartedAt.get(request)??Date.now());if(reply.statusCode>=500)metrics.errors++;requestStartedAt.delete(request);});
- app.get("/metrics",async(_request,reply)=>reply.type("text/plain; version=0.0.4").send(metricsText(metrics)));
+ app.get("/metrics",async(request,reply)=>{
+  if(env.NODE_ENV==="production"){
+    const expected=env.METRICS_TOKEN;
+    const authorization=typeof request.headers.authorization==="string"?request.headers.authorization:"";
+    const provided=authorization.startsWith("Bearer ")?authorization.slice(7):"";
+    if(!expected||!provided){
+      return reply.code(404).send({error:"not_found"});
+    }
+    const a=Buffer.from(provided),b=Buffer.from(expected);
+    if(a.length!==b.length||!timingSafeEqual(a,b)) return reply.code(404).send({error:"not_found"});
+  }
+  return reply.type("text/plain; version=0.0.4").send(metricsText(metrics));
+});
+
+ app.addHook("onRequest",async(request,reply)=>{
+  if(env.NODE_ENV==="production" && isUnsafeAdminRequest(request) && isCrossSiteRequest(request)){
+    return reply.code(403).send({error:"cross_site_request_blocked"});
+  }
+});
  app.addContentTypeParser("application/octet-stream",{parseAs:"buffer"},(_req,body,done)=>done(null,body));
  app.register(healthRoutes);
   await app.register(channelWebhookRoutes,{...(env.TIKTOK_CLIENT_SECRET?{tiktokClientSecret:env.TIKTOK_CLIENT_SECRET}:{}),processInbound:async()=>{}});

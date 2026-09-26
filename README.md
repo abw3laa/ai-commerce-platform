@@ -221,8 +221,16 @@ Provider-specific social integrations still require the corresponding platform a
 - Task 20 — production operations: backups, restore tooling, readiness monitoring, metrics, alert hook, production Docker configuration, and Oracle deployment runbook implemented.
 - Task 21 — optimization: bounded conversation memory is chronological and avoids duplicating the current inbound message in AI history.
 
+## Android Admin
+
+A lightweight Android Admin client is included under `android-admin/`. It wraps the existing `/admin/app` session UI rather than duplicating the entire backend API in a second client stack. It requires an HTTPS `ADMIN_BASE_URL` at build time, blocks cleartext traffic, restricts WebView navigation to the configured HTTPS origin, disables file/content access, and does not hardcode credentials. Build it with Android Studio or Gradle 9.6 and pass `-PADMIN_BASE_URL=https://your-domain/admin/app`. Android network security is configured to require HTTPS and reject cleartext traffic.
+
+## Security hardening
+
+Production state-changing `/admin/*` requests are blocked when browser fetch metadata or the `Origin` header identifies a cross-site request. `/metrics` is not publicly exposed in production and requires a bearer token configured through `METRICS_TOKEN`. Payment receipt media is authorized with the `payments` permission rather than the general `products` permission. `scripts/security-smoke.sh` provides non-destructive deployment checks, and CI runs dependency vulnerability auditing.
+
 ## Final verification
 
-Main currently has no open pull requests or open issues. CI run 504 on commit 155452b09005913594fbc232182ac91549fc6c7f completed successfully after Prisma migrations, typecheck, lint, tests, build, production-script validation, and production Docker image build.
+Main currently has no open pull requests or open issues. The final CI run is recorded after the current hardening branch is merged; deployment-dependent provider connections are verified separately. completed successfully after Prisma migrations, typecheck, lint, tests, build, production-script validation, and production Docker image build.
 
 Deployment-dependent items are deliberately not represented as completed provider connections: WhatsApp account pairing, AI provider credentials, carrier credentials, and social-platform app permissions must be supplied on the production environment.
